@@ -7,7 +7,9 @@ StudySpot is a small app for finding and hosting study sessions for your courses
 
 ## From Template to Product
 
-This repository started from the plain ASP.NET Core + React template (see the [`lectures/00`](https://github.com/niku-live/teaching-university-psi-2026-playground/tree/lectures/00) branch for that starting point). During [Lecture 01](https://github.com/niku-live/teaching-university-psi-2026/tree/main/Lecture01) we turned it into the beginning of StudySpot by:
+New to the template? [WALKTHROUGH.md](WALKTHROUGH.md) covers preparing your computer (SDKs, Git, an IDE) and creating a new project from the ASP.NET Core + React template from scratch, across the command line, Visual Studio, VS Code, and Rider.
+
+This repository started from that plain template (see the [`lectures/00`](https://github.com/niku-live/teaching-university-psi-2026-playground/tree/lectures/00) branch for that starting point). During [Lecture 01](https://github.com/niku-live/teaching-university-psi-2026/tree/main/Lecture01) we turned it into the beginning of StudySpot by:
 
 1. Writing this README to describe the actual product, instead of the template's generic scaffolding text.
 2. Writing a [ROADMAP.md](ROADMAP.md) with Alpha/Beta/Final scope.
@@ -32,9 +34,11 @@ The frontend was inherited from the older ASP.NET Core React template and still 
 
 ## Prerequisites
 
+See [WALKTHROUGH.md](WALKTHROUGH.md) for a guided setup. In short, you'll need:
+
 - [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
 - A current [Node.js LTS](https://nodejs.org/) release with npm
-- [Visual Studio 2022](https://visualstudio.microsoft.com/vs/) with the ASP.NET and web development workload, or [Visual Studio Code](https://code.visualstudio.com/) with C# Dev Kit
+- [Visual Studio 2022](https://visualstudio.microsoft.com/vs/) with the ASP.NET and web development workload, [Visual Studio Code](https://code.visualstudio.com/) with C# Dev Kit, or JetBrains Rider
 - A trusted ASP.NET Core development certificate: `dotnet dev-certs https --trust`
 
 ## Build and Run
