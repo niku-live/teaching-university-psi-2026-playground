@@ -2,6 +2,12 @@
 
 StudySpot is a small app for finding and hosting study sessions for your courses: see what's on this week, or add your own session for others to join.
 
+## Team
+
+**Product:** StudySpot
+**Team:** Team StudySpot
+**Team leader:** Ieva Petraitytė
+
 > [!WARNING]
 > This is the **live demonstration project** for the **Software Development I (PSI) 2026 Fall** course, not a production app. Some commits deliberately show incomplete solutions, trade-offs, or bad practices for teaching purposes. Course notes and lecture materials are maintained in the [PSI 2026 course repository](https://github.com/niku-live/teaching-university-psi-2026); student teams should follow the assignment requirements there rather than copy this repository as their submission.
 
@@ -18,6 +24,10 @@ This repository started from that plain template (see the [`lectures/00`](https:
 5. Deleting template boilerplate we no longer need (the `Counter` demo page and the old `FetchData` page).
 
 Your own team repository should go through the same steps this week &mdash; see the [Lecture 01 homework](https://github.com/niku-live/teaching-university-psi-2026/blob/main/Lecture01/TODO-LIST.md).
+
+## End-to-End Scenario
+
+Ieva is studying for the Software Development I exam and wants company. She opens StudySpot, browses the sessions listed for her course, and finds one hosted by Tomas at the library at 6pm. She shows up, and they study together. If nothing on the list fits her schedule, she posts her own session instead, and other students can find and join it the same way.
 
 ## Roadmap
 
