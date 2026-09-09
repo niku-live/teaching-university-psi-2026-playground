@@ -8,6 +8,13 @@ StudySpot is a small app for finding and hosting study sessions for your courses
 **Team:** Team StudySpot
 **Team leader:** Ieva Petraitytė
 
+### Team Members
+
+- Ieva Petraitytė (Team Leader, Backend) - _ieva-petraityte_
+- Tomas Jonaitis (Backend) - _tjonaitis_
+- Marta Rimkutė (Frontend) - _mrimkute_
+- Dovydas Kazlauskas (Frontend, QA) - _dovydask_
+
 > [!WARNING]
 > This is the **live demonstration project** for the **Software Development I (PSI) 2026 Fall** course, not a production app. Some commits deliberately show incomplete solutions, trade-offs, or bad practices for teaching purposes. Course notes and lecture materials are maintained in the [PSI 2026 course repository](https://github.com/niku-live/teaching-university-psi-2026); student teams should follow the assignment requirements there rather than copy this repository as their submission.
 
@@ -41,6 +48,24 @@ See [ROADMAP.md](ROADMAP.md).
 - Bootstrap 5
 
 The frontend was inherited from the older ASP.NET Core React template and still uses Create React App. Keeping that implementation visible gives us a realistic codebase to inspect and improve during the course.
+
+## Branch Naming Rules
+
+Pattern: `[initials]/[issue-number]-[short-title]`
+
+Example &mdash; Tomas picks up issue #12, "Add session search":
+
+`tj/12-add-session-search`
+
+- Initials first (lowercase), separated from the rest by `/`.
+- Issue number next, then a short kebab-case description of the task.
+- Branch off `main`; open a pull request back into `main` when ready for review.
+
+## Code Formatting
+
+- **Backend (C#):** run `dotnet format` before committing so contributions read the same regardless of which IDE wrote them.
+- **Frontend (JavaScript):** match the style already used under `ClientApp/src` - most editors pick this up automatically if you have a formatter (Prettier/ESLint) configured.
+- Whichever IDE you use (Visual Studio, VS Code, or Rider - see [WALKTHROUGH.md](WALKTHROUGH.md)), turning on "format on save" makes this automatic instead of a manual step before every commit.
 
 ## Prerequisites
 
