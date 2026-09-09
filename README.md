@@ -15,6 +15,8 @@ StudySpot is a small app for finding and hosting study sessions for your courses
 - Marta Rimkutė (Frontend) - _mrimkute_
 - Dovydas Kazlauskas (Frontend, QA) - _dovydask_
 
+_These team members are made up for this demo project - they are not real people._
+
 > [!WARNING]
 > This is the **live demonstration project** for the **Software Development I (PSI) 2026 Fall** course, not a production app. Some commits deliberately show incomplete solutions, trade-offs, or bad practices for teaching purposes. Course notes and lecture materials are maintained in the [PSI 2026 course repository](https://github.com/niku-live/teaching-university-psi-2026); student teams should follow the assignment requirements there rather than copy this repository as their submission.
 
