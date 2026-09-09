@@ -36,6 +36,16 @@ Pick **one** of the following (all three work with this course's projects):
 
 The starting point for this repository (before the changes described in the main [README](README.md)) is the built-in ASP.NET Core + React template. Run `dotnet new list` first to confirm the exact template name available on your installed SDK version - the steps below assume it's still named `react`.
 
+> [!WARNING]
+> Microsoft dropped this template from the box SDK after .NET 8 - `dotnet new react` still works on many machines only because an older SDK feature band is also installed and registers it. That older registration is also why the generated `.csproj` may target an outdated `TargetFramework` (e.g. `net7.0`) even if .NET 10 is the SDK you actually want. **After scaffolding, open the generated `.csproj` and confirm/fix:**
+> ```xml
+> <TargetFramework>net10.0</TargetFramework>
+> ```
+> ```xml
+> <PackageReference Include="Microsoft.AspNetCore.SpaProxy" Version="10.0.8" />
+> ```
+> (match this repo's own [`CoolApp.csproj`](CoolApp.csproj) if in doubt.) If `dotnet new react` doesn't run at all on a machine with only the .NET 10 SDK installed, that confirms the template is gone there too - ask in class rather than guessing at a replacement.
+
 ### a) Command line (PowerShell / Bash)
 
 ```bash
