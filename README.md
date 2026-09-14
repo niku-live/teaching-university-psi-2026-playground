@@ -114,7 +114,9 @@ npm run build
 
 ## Current Examples
 
-- A minimal ASP.NET Core API returning and creating study sessions (`GET`/`POST /api/studysessions`)
+- A full CRUD ASP.NET Core API for study sessions (`GET`/`POST`/`PUT`/`DELETE /api/studysessions`)
+- Interactive API documentation via Swagger UI (`/swagger`, Development environment only)
+- A React form for creating a study session from the UI, not just the API
 - React routing and reusable components
 - Client-to-server API calls through the development proxy
 - Development and production SPA build integration
