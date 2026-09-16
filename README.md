@@ -111,12 +111,14 @@ npm run build
 | `ClientApp/src/components/` | Example UI components |
 | `appsettings*.json` | Backend configuration |
 | `Properties/launchSettings.json` | Local development profiles and URLs |
+| `CoolApp.http` | REST Client requests for testing the API (see [File Formats & Tools](https://github.com/niku-live/teaching-university-psi-2026#http-request-files-http) in the course repo) |
 
 ## Current Examples
 
 - A full CRUD ASP.NET Core API for study sessions (`GET`/`POST`/`PUT`/`DELETE /api/studysessions`)
 - Interactive API documentation via Swagger UI (`/swagger`, Development environment only)
 - A React form for creating a study session from the UI, not just the API
+- `CoolApp.http` - ready-made REST Client requests exercising the full CRUD API (`GET`/`POST`/`PUT`/`DELETE`)
 - React routing and reusable components
 - Client-to-server API calls through the development proxy
 - Development and production SPA build integration

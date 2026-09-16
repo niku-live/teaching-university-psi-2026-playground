@@ -144,7 +144,8 @@ async handleSubmit(event) {
 Run the project (`dotnet run`), then exercise the full CRUD surface with whichever client you prefer - they're all just HTTP:
 
 - **Swagger UI** at `/swagger` - browse the schema, or use "Try it out" to send a request from the page itself.
-- **REST Client** (`.http` files) or **PowerShell** (`Invoke-RestMethod`) - see the [main course repo's Lecture 02 material](https://github.com/niku-live/teaching-university-psi-2026/tree/main/Lecture02) for worked examples against this same API, plus a general-purpose REST API primer using public APIs (PokeAPI, JSONPlaceholder).
+- **REST Client** - this repo's own [`CoolApp.http`](CoolApp.http) has the full CRUD sequence ready to send (create one for your own project, adjusting host/paths to match). See the [main course repo's Lecture 02 material](https://github.com/niku-live/teaching-university-psi-2026/tree/main/Lecture02) for a general-purpose REST API primer using public APIs (PokeAPI, JSONPlaceholder), plus what the REST Client extension is and how to install it.
+- **PowerShell** (`Invoke-RestMethod`) - the same requests, sent without a `.http` file at all.
 - **The browser itself** - `GET` requests work by just typing the URL in the address bar; open Developer Tools' Network tab while using the real `/study-sessions` page to see the `GET`/`POST` requests the UI fires for you.
 - **The new form** - open `/study-sessions`, fill it in, submit, and confirm the table refreshes with the new session.
 
