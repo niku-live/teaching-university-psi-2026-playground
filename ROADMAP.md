@@ -7,7 +7,9 @@ This roadmap follows the Alpha / Beta / Final structure expected from your own l
 Features:
 - [x] List available study sessions
 - [x] Create a new study session via the API
-- [ ] Create a session from the UI (currently API-only, demonstrated with the browser/curl/Postman)
+- [x] Create a session from the UI
+- [x] Full CRUD on the API (update and delete a study session, not just list/create)
+- [x] API documentation via Swagger/OpenAPI
 - [ ] Basic input validation on the `StudySession` model
 
 Requirement coverage still needed:

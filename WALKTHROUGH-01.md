@@ -1,6 +1,6 @@
-# From a Blank Computer to a Running Project
+# Walkthrough 01: From a Blank Computer to a Running Project
 
-This is the step-by-step walkthrough behind [Lecture 01](https://github.com/niku-live/teaching-university-psi-2026/tree/main/Lecture01): everything needed to go from an empty machine to a running ASP.NET Core + React project, before any of the "make it your own" changes described in the main [README](README.md).
+This is the step-by-step walkthrough behind [Lecture 01](https://github.com/niku-live/teaching-university-psi-2026/tree/main/Lecture01): everything needed to go from an empty machine to a running ASP.NET Core + React project, before any of the "make it your own" changes described in the main [README](README.md). See [WALKTHROUGHS.md](WALKTHROUGHS.md) for the full list of per-lecture walkthroughs.
 
 ## 1. Prepare Your Computer
 
@@ -78,3 +78,5 @@ VS Code doesn't have a project-creation wizard, so create the project from the i
 ## Next Steps
 
 Once your project builds and runs with the default template content, follow the [main README](README.md) and [ROADMAP.md](ROADMAP.md) to see how this repository turned the same starting point into StudySpot - then do the same for your own team project (see the [Lecture 01 homework](https://github.com/niku-live/teaching-university-psi-2026/blob/main/Lecture01/TODO-LIST.md)).
+
+Once that's done, continue with [WALKTHROUGH-02.md](WALKTHROUGH-02.md) for Lecture 02's changes, or see [WALKTHROUGHS.md](WALKTHROUGHS.md) for the full list.

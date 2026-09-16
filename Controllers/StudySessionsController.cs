@@ -49,4 +49,36 @@ public class StudySessionsController : ControllerBase
         Sessions.Add(session);
         return CreatedAtAction(nameof(GetById), new { id = session.Id }, session);
     }
+
+    [HttpPut("{id:int}")]
+    public IActionResult Update(int id, StudySession session)
+    {
+        var existing = Sessions.FirstOrDefault(s => s.Id == id);
+        if (existing is null)
+        {
+            return NotFound();
+        }
+
+        existing.Course = session.Course;
+        existing.Topic = session.Topic;
+        existing.Location = session.Location;
+        existing.StartsAt = session.StartsAt;
+        existing.HostName = session.HostName;
+        existing.SeatsAvailable = session.SeatsAvailable;
+
+        return NoContent();
+    }
+
+    [HttpDelete("{id:int}")]
+    public IActionResult Delete(int id)
+    {
+        var existing = Sessions.FirstOrDefault(s => s.Id == id);
+        if (existing is null)
+        {
+            return NotFound();
+        }
+
+        Sessions.Remove(existing);
+        return NoContent();
+    }
 }
