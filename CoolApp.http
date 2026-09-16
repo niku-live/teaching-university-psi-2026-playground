@@ -1,0 +1,42 @@
+@HostAddress = https://localhost:7039
+
+### Get all study sessions
+GET {{HostAddress}}/api/studysessions
+Accept: application/json
+
+### Get a single study session by id
+GET {{HostAddress}}/api/studysessions/1
+Accept: application/json
+
+### Get a study session that does not exist (expect 404 Not Found)
+GET {{HostAddress}}/api/studysessions/999
+Accept: application/json
+
+### Create a new study session
+POST {{HostAddress}}/api/studysessions
+Content-Type: application/json
+
+{
+  "course": "Software Development I",
+  "topic": "Testing your own API",
+  "location": "MIF, room 401",
+  "startsAt": "2026-09-23T18:00:00",
+  "hostName": "You",
+  "seatsAvailable": 4
+}
+
+### Update a study session
+PUT {{HostAddress}}/api/studysessions/1
+Content-Type: application/json
+
+{
+  "course": "Software Development I",
+  "topic": "Pull request etiquette",
+  "location": "MIF, room 401",
+  "startsAt": "2026-09-16T18:00:00",
+  "hostName": "Ieva",
+  "seatsAvailable": 1
+}
+
+### Delete a study session
+DELETE {{HostAddress}}/api/studysessions/2
