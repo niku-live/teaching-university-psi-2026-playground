@@ -22,7 +22,7 @@ _These team members are made up for this demo project - they are not real people
 
 ## From Template to Product
 
-New to the template? [WALKTHROUGH.md](WALKTHROUGH.md) covers preparing your computer (SDKs, Git, an IDE) and creating a new project from the ASP.NET Core + React template from scratch, across the command line, Visual Studio, VS Code, and Rider.
+New to the template? [WALKTHROUGH-01.md](WALKTHROUGH-01.md) covers preparing your computer (SDKs, Git, an IDE) and creating a new project from the ASP.NET Core + React template from scratch, across the command line, Visual Studio, VS Code, and Rider. See [WALKTHROUGHS.md](WALKTHROUGHS.md) for the full list of per-lecture walkthroughs, including later lectures' changes.
 
 This repository started from that plain template (see the [`lectures/00`](https://github.com/niku-live/teaching-university-psi-2026-playground/tree/lectures/00) branch for that starting point). During [Lecture 01](https://github.com/niku-live/teaching-university-psi-2026/tree/main/Lecture01) we turned it into the beginning of StudySpot by:
 
@@ -67,11 +67,11 @@ Example &mdash; Tomas picks up issue #12, "Add session search":
 
 - **Backend (C#):** run `dotnet format` before committing so contributions read the same regardless of which IDE wrote them.
 - **Frontend (JavaScript):** match the style already used under `ClientApp/src` - most editors pick this up automatically if you have a formatter (Prettier/ESLint) configured.
-- Whichever IDE you use (Visual Studio, VS Code, or Rider - see [WALKTHROUGH.md](WALKTHROUGH.md)), turning on "format on save" makes this automatic instead of a manual step before every commit.
+- Whichever IDE you use (Visual Studio, VS Code, or Rider - see [WALKTHROUGH-01.md](WALKTHROUGH-01.md)), turning on "format on save" makes this automatic instead of a manual step before every commit.
 
 ## Prerequisites
 
-See [WALKTHROUGH.md](WALKTHROUGH.md) for a guided setup. In short, you'll need:
+See [WALKTHROUGH-01.md](WALKTHROUGH-01.md) for a guided setup. In short, you'll need:
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
 - A current [Node.js LTS](https://nodejs.org/) release with npm
