@@ -1,0 +1,18 @@
+.study-sessions-table {
+  overflow-x: auto;
+}
+
+.study-session-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 1rem;
+  max-width: 40rem;
+}
+
+.study-session-form__field {
+  flex: 1 1 16rem;
+}
+
+.study-session-form button {
+  flex-basis: 100%;
+}

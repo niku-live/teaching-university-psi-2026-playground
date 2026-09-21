@@ -112,15 +112,20 @@ npm run build
 | `appsettings*.json` | Backend configuration |
 | `Properties/launchSettings.json` | Local development profiles and URLs |
 | `CoolApp.http` | REST Client requests for testing the API (see [File Formats & Tools](https://github.com/niku-live/teaching-university-psi-2026#http-request-files-http) in the course repo) |
+| `docs/definition-of-done.md` | Shared checklist for when a change counts as finished |
+| `.github/pull_request_template.md` | Checklist every pull request starts from |
 
 ## Current Examples
 
 - A full CRUD ASP.NET Core API for study sessions (`GET`/`POST`/`PUT`/`DELETE /api/studysessions`)
+- Server-side validation on the `StudySession` model (`DataAnnotations` + a custom `IValidatableObject` check), enforced automatically by `[ApiController]` model binding - invalid data gets a `400 Bad Request` with details, without any manual checks in the controller
+- Client-side validation on the "Host a new study session" form, with the same errors shown whether they come from the browser or the API
 - Interactive API documentation via Swagger UI (`/swagger`, Development environment only)
 - A React form for creating a study session from the UI, not just the API
-- `CoolApp.http` - ready-made REST Client requests exercising the full CRUD API (`GET`/`POST`/`PUT`/`DELETE`)
+- `CoolApp.http` - ready-made REST Client requests exercising the full CRUD API (`GET`/`POST`/`PUT`/`DELETE`), including an invalid request to see the validation error shape
 - React routing and reusable components
 - Client-to-server API calls through the development proxy
 - Development and production SPA build integration
+- A pull request template and definition of done, so "done" means the same thing for everyone on the team
 
 The repository will change throughout the semester. Use Git history to compare lecture stages and understand why each change was introduced.
