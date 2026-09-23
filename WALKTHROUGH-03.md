@@ -1,6 +1,6 @@
 # Walkthrough 03: Validating Input, Client and Server
 
-This is the step-by-step walkthrough behind [Lecture 03](https://github.com/niku-live/teaching-university-psi-2026/tree/main/Lecture03): adding real input validation to the create-session form (both client- and server-side), a small CSS pass, and two lightweight Agile process artifacts. See [WALKTHROUGHS.md](WALKTHROUGHS.md) for the full list of per-lecture walkthroughs.
+This is the step-by-step walkthrough behind [Lecture 03](https://github.com/niku-live/teaching-university-psi-2026/tree/main/Lecture03): adding real input validation to the create-session form (both client- and server-side), a small CSS pass, and four repository process artifacts (pull request template, definition of done, CONTRIBUTING.md, CODEOWNERS). See [WALKTHROUGHS.md](WALKTHROUGHS.md) for the full list of per-lecture walkthroughs.
 
 This assumes you already have a working project at the state described in [WALKTHROUGH-02.md](WALKTHROUGH-02.md) - full CRUD on the API, Swagger docs, and a create-session form. Apply these same steps to **your own team's project**, not just this repository.
 
@@ -177,9 +177,9 @@ Reinforcing this week's CSS/flexbox material with something visible: add a compo
 
 Wrap the table in a `<div className="study-sessions-table">` and add `className="study-session-form"` to the `<form>`. `flex-wrap` plus each field's `flex: 1 1 16rem` lets the form lay out two columns on a wide screen and collapse to one on a narrow one, without a media query.
 
-## 6. Add Agile Process Artifacts
+## 6. Add Repository Process Artifacts
 
-This week's other theory topic was Agile - specifically the idea of a shared "Definition of Done" and collective ownership backed by a shared standard. Turn that into two files your team can actually use, rather than just discussing it:
+This week's other theory topic was Agile - specifically the idea of a shared "Definition of Done" and collective ownership backed by a shared standard. Turn that into four files your team can actually use, rather than just discussing it:
 
 `.github/pull_request_template.md` - GitHub pre-fills this into every new pull request's description box:
 
@@ -214,7 +214,33 @@ A change is "done" when all of the following are true:
 "Works on my machine" is not done. If it isn't merged and documented, it isn't done.
 ```
 
-These aren't code your app runs - they're process, same as your branch naming rule or your `dotnet format` habit. Add your own team's equivalents to your own repository this week.
+Two more, rounding this out from "one checklist" into an actual written-down process:
+
+`CONTRIBUTING.md` - consolidates the branch naming and code formatting rules that were previously scattered across `README.md`, plus the pull request process itself (fill in the template, meet the Definition of Done, expect `CODEOWNERS` to auto-request the right reviewer). `README.md` now just links to it instead of repeating it - see this repo's own [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
+`.github/CODEOWNERS` - GitHub reads this automatically and adds the matching people as reviewers the moment a pull request touches their path:
+
+```
+# Default: the team leader owns anything not covered more specifically below.
+* @ieva-petraityte
+
+# Backend
+/Controllers/ @ieva-petraityte @tjonaitis
+/Models/ @ieva-petraityte @tjonaitis
+/Program.cs @ieva-petraityte @tjonaitis
+
+# Frontend
+/ClientApp/ @mrimkute @dovydask
+
+# Process and docs - any team member can own these.
+/docs/ @ieva-petraityte @tjonaitis @mrimkute @dovydask
+/.github/ @ieva-petraityte @tjonaitis @mrimkute @dovydask
+/CONTRIBUTING.md @ieva-petraityte @tjonaitis @mrimkute @dovydask
+```
+
+**Important caveat for this repo specifically**: the usernames above are the fictional team from `README.md`, not real GitHub accounts - GitHub silently ignores a `CODEOWNERS` entry it can't resolve, so this file has no actual effect here. For your own team's project, replace every handle with your real teammates' actual GitHub usernames, or it's just decoration.
+
+These aren't code your app runs - they're process, same as your branch naming rule or your `dotnet format` habit. Add your own team's equivalents (with your own real usernames) to your own repository this week.
 
 ## 7. Final Check
 

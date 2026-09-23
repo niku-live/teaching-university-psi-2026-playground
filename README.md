@@ -51,23 +51,9 @@ See [ROADMAP.md](ROADMAP.md).
 
 The frontend was inherited from the older ASP.NET Core React template and still uses Create React App. Keeping that implementation visible gives us a realistic codebase to inspect and improve during the course.
 
-## Branch Naming Rules
+## Contributing
 
-Pattern: `[initials]/[issue-number]-[short-title]`
-
-Example &mdash; Tomas picks up issue #12, "Add session search":
-
-`tj/12-add-session-search`
-
-- Initials first (lowercase), separated from the rest by `/`.
-- Issue number next, then a short kebab-case description of the task.
-- Branch off `main`; open a pull request back into `main` when ready for review.
-
-## Code Formatting
-
-- **Backend (C#):** run `dotnet format` before committing so contributions read the same regardless of which IDE wrote them.
-- **Frontend (JavaScript):** match the style already used under `ClientApp/src` - most editors pick this up automatically if you have a formatter (Prettier/ESLint) configured.
-- Whichever IDE you use (Visual Studio, VS Code, or Rider - see [WALKTHROUGH-01.md](WALKTHROUGH-01.md)), turning on "format on save" makes this automatic instead of a manual step before every commit.
+Branch naming, code formatting, pull request process, and who owns what: see [CONTRIBUTING.md](CONTRIBUTING.md). Every new pull request also gets [`.github/pull_request_template.md`](.github/pull_request_template.md) pre-filled, and [`.github/CODEOWNERS`](.github/CODEOWNERS) auto-requests the right reviewer.
 
 ## Prerequisites
 
@@ -114,6 +100,8 @@ npm run build
 | `CoolApp.http` | REST Client requests for testing the API (see [File Formats & Tools](https://github.com/niku-live/teaching-university-psi-2026#http-request-files-http) in the course repo) |
 | `docs/definition-of-done.md` | Shared checklist for when a change counts as finished |
 | `.github/pull_request_template.md` | Checklist every pull request starts from |
+| `CONTRIBUTING.md` | Branch naming, formatting, and the pull request process |
+| `.github/CODEOWNERS` | Who gets auto-requested for review, by path |
 
 ## Current Examples
 
@@ -127,5 +115,6 @@ npm run build
 - Client-to-server API calls through the development proxy
 - Development and production SPA build integration
 - A pull request template and definition of done, so "done" means the same thing for everyone on the team
+- `CONTRIBUTING.md` and `.github/CODEOWNERS`, so the process (branching, formatting, review routing) is written down once instead of tribal knowledge
 
 The repository will change throughout the semester. Use Git history to compare lecture stages and understand why each change was introduced.
