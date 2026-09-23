@@ -4,5 +4,6 @@ Step-by-step, copy-pasteable instructions for turning your own team's project in
 
 - [WALKTHROUGH-01.md](WALKTHROUGH-01.md) - From a Blank Computer to a Running Project (Lecture 01): install prerequisites, scaffold the ASP.NET Core + React template, get it running.
 - [WALKTHROUGH-02.md](WALKTHROUGH-02.md) - Full CRUD, Swagger, and a Create-Session Form (Lecture 02): add `PUT`/`DELETE` to the API, wire up Swagger/OpenAPI docs, add a real UI form for creating a session.
+- [WALKTHROUGH-03.md](WALKTHROUGH-03.md) - Validating Input, Client and Server (Lecture 03): add client-side form validation, prove it's not enough by bypassing it with a direct API call, then add server-side model validation, a small CSS pass, and repository process artifacts (pull request template, definition of done, CONTRIBUTING.md, CODEOWNERS).
 
 These are separate from [README.md](README.md) and [ROADMAP.md](ROADMAP.md), which describe *this* repository's own product decisions (StudySpot) - the walkthroughs are reusable instructions meant for **your own team's project**, without the StudySpot theming.

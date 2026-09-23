@@ -151,4 +151,4 @@ Run the project (`dotnet run`), then exercise the full CRUD surface with whichev
 
 ## Next Steps
 
-Once this is done, update `ROADMAP.md` to check off the items you just completed, and `README.md`'s "Current Examples" section to match. See [WALKTHROUGHS.md](WALKTHROUGHS.md) for later lectures' walkthroughs as they're added.
+Once this is done, update `ROADMAP.md` to check off the items you just completed, and `README.md`'s "Current Examples" section to match. Continue with [WALKTHROUGH-03.md](WALKTHROUGH-03.md) - adding real input validation, client and server. See [WALKTHROUGHS.md](WALKTHROUGHS.md) for later lectures' walkthroughs as they're added.

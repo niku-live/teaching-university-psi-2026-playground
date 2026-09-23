@@ -1,0 +1,23 @@
+# Code owners for StudySpot.
+# See https://docs.github.com/articles/about-code-owners
+#
+# These are the fictional team members from README.md ("Team Members") - not
+# real GitHub accounts, so this file has no actual effect on this demo repo
+# (GitHub silently ignores an entry it can't resolve to a real user or team).
+# Replace these with your own team's real GitHub usernames to make it work.
+
+# Default: the team leader owns anything not covered more specifically below.
+* @ieva-petraityte
+
+# Backend
+/Controllers/ @ieva-petraityte @tjonaitis
+/Models/ @ieva-petraityte @tjonaitis
+/Program.cs @ieva-petraityte @tjonaitis
+
+# Frontend
+/ClientApp/ @mrimkute @dovydask
+
+# Process and docs - any team member can own these.
+/docs/ @ieva-petraityte @tjonaitis @mrimkute @dovydask
+/.github/ @ieva-petraityte @tjonaitis @mrimkute @dovydask
+/CONTRIBUTING.md @ieva-petraityte @tjonaitis @mrimkute @dovydask
