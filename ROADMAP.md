@@ -10,7 +10,7 @@ Features:
 - [x] Create a session from the UI
 - [x] Full CRUD on the API (update and delete a study session, not just list/create)
 - [x] API documentation via Swagger/OpenAPI
-- [ ] Basic input validation on the `StudySession` model
+- [x] Basic input validation on the `StudySession` model
 
 Requirement coverage still needed:
 - [ ] A named `record` type (e.g. an immutable `StudySessionSummary`) alongside the existing `class`/`struct` usage

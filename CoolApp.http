@@ -33,10 +33,23 @@ Content-Type: application/json
   "course": "Software Development I",
   "topic": "Pull request etiquette",
   "location": "MIF, room 401",
-  "startsAt": "2026-09-16T18:00:00",
+  "startsAt": "2026-09-24T18:00:00",
   "hostName": "Ieva",
   "seatsAvailable": 1
 }
 
 ### Delete a study session
 DELETE {{HostAddress}}/api/studysessions/2
+
+### Create a study session with invalid data (expect 400 Bad Request)
+POST {{HostAddress}}/api/studysessions
+Content-Type: application/json
+
+{
+  "course": "",
+  "topic": "Testing validation",
+  "location": "MIF, room 401",
+  "startsAt": "2020-01-01T18:00:00",
+  "hostName": "You",
+  "seatsAvailable": 0
+}
