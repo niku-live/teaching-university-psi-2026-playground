@@ -13,12 +13,12 @@ Features:
 - [x] Basic input validation on the `StudySession` model
 
 Requirement coverage still needed:
-- [ ] A named `record` type (e.g. an immutable `StudySessionSummary`) alongside the existing `class`/`struct` usage
-- [ ] At least one `enum` (e.g. a `SessionStatus`)
-- [ ] Named and optional arguments in a real method signature
-- [ ] An extension method (e.g. `IEnumerable<StudySession>.UpcomingOnly()`)
-- [ ] LINQ used for filtering/sorting sessions
-- [ ] One standard .NET interface implemented (e.g. `IComparable<StudySession>` to sort by start time)
+- [x] A named `record` type (e.g. an immutable `StudySessionSummary`) alongside the existing `class`/`struct` usage
+- [x] At least one `enum` (e.g. a `SessionStatus`)
+- [x] Named and optional arguments in a real method signature
+- [x] An extension method (e.g. `IEnumerable<StudySession>.UpcomingOnly()`)
+- [x] LINQ used for filtering/sorting sessions
+- [x] One standard .NET interface implemented (e.g. `IComparable<StudySession>` to sort by start time)
 
 ## Beta - matches Lab Assignment #2 (lectures 7-10)
 

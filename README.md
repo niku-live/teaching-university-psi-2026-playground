@@ -116,5 +116,10 @@ npm run build
 - Development and production SPA build integration
 - A pull request template and definition of done, so "done" means the same thing for everyone on the team
 - `CONTRIBUTING.md` and `.github/CODEOWNERS`, so the process (branching, formatting, review routing) is written down once instead of tribal knowledge
+- A `SessionStatus` enum (`Scheduled`/`Full`), computed from `SeatsAvailable` instead of scattering `if` checks on a raw number
+- `StudySessionSummary`, an immutable `record` returned by `GET /api/studysessions/summary` alongside the full `StudySession` `class`
+- `StudySessionExtensions.UpcomingOnly()`, an extension method using LINQ to filter out past sessions, with an optional `asOf` parameter for testability
+- `StudySession` implements `IComparable<StudySession>`, so `List<StudySession>.Sort()` orders sessions by start time with no comparer needed
+- `StartsAt` is a `DateTimeOffset`, not a bare `DateTime` - the API and the browser form both deal in explicit, unambiguous instants instead of a timestamp whose timezone has to be guessed
 
 The repository will change throughout the semester. Use Git history to compare lecture stages and understand why each change was introduced.

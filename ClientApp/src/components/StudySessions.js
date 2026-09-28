@@ -41,8 +41,8 @@ export class StudySessions extends Component {
       errors.startsAt = 'Starts at must be in the future.';
     }
 
-    if (!form.seatsAvailable || form.seatsAvailable < 1) {
-      errors.seatsAvailable = 'Seats available must be at least 1.';
+    if (form.seatsAvailable === '' || form.seatsAvailable < 0) {
+      errors.seatsAvailable = 'Seats available cannot be negative.';
     }
 
     return errors;
@@ -72,6 +72,7 @@ export class StudySessions extends Component {
             <th>Starts at</th>
             <th>Host</th>
             <th>Seats left</th>
+            <th>Status</th>
           </tr>
         </thead>
         <tbody>
@@ -83,6 +84,7 @@ export class StudySessions extends Component {
               <td>{new Date(session.startsAt).toLocaleString()}</td>
               <td>{session.hostName}</td>
               <td>{session.seatsAvailable}</td>
+              <td>{session.status}</td>
             </tr>
           )}
         </tbody>
@@ -130,7 +132,7 @@ export class StudySessions extends Component {
           {this.renderField('location', 'Location')}
           {this.renderField('startsAt', 'Starts at', { type: 'datetime-local' })}
           {this.renderField('hostName', 'Host name')}
-          {this.renderField('seatsAvailable', 'Seats available', { type: 'number', extraProps: { min: '1' } })}
+          {this.renderField('seatsAvailable', 'Seats available', { type: 'number', extraProps: { min: '0' } })}
           <button className="btn btn-primary" type="submit" disabled={this.state.submitting}>
             {this.state.submitting ? 'Creating...' : 'Create session'}
           </button>
@@ -157,10 +159,17 @@ export class StudySessions extends Component {
 
     this.setState({ submitting: true, error: null, fieldErrors: {} });
 
+    // The <input type="datetime-local"> value has no timezone info - it's just
+    // "2026-10-24T18:00" in whatever timezone the browser happens to be in. Converting
+    // it to a Date and back out via toISOString() turns it into an explicit UTC instant
+    // (e.g. "2026-10-24T16:00:00.000Z") before it goes anywhere near the network, so the
+    // API is never left guessing which timezone a bare timestamp was supposed to mean.
+    const payload = { ...this.state.form, startsAt: new Date(this.state.form.startsAt).toISOString() };
+
     const response = await fetch('api/studysessions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(this.state.form)
+      body: JSON.stringify(payload)
     });
 
     if (!response.ok) {
