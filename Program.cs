@@ -2,7 +2,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews()
+    // Serialize enums (e.g. StudySession.Status) as their names ("Scheduled") instead
+    // of the underlying number - readable in Swagger, the .http responses, and the UI.
+    .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter()));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 

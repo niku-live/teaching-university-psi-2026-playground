@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using CoolApp.Extensions;
 using CoolApp.Models;
 
 namespace CoolApp.Controllers;
@@ -16,7 +17,7 @@ public class StudySessionsController : ControllerBase
             Course = "Software Development I",
             Topic = "Pull request etiquette",
             Location = "MIF, room 401",
-            StartsAt = DateTime.Now.AddDays(1),
+            StartsAt = DateTimeOffset.UtcNow.AddDays(1),
             HostName = "Ieva",
             SeatsAvailable = 3
         },
@@ -26,14 +27,25 @@ public class StudySessionsController : ControllerBase
             Course = "Software Development I",
             Topic = ".NET memory model (stack vs heap)",
             Location = "Library, 2nd floor",
-            StartsAt = DateTime.Now.AddDays(2),
+            StartsAt = DateTimeOffset.UtcNow.AddDays(2),
             HostName = "Tomas",
             SeatsAvailable = 5
         }
     };
 
     [HttpGet]
-    public IEnumerable<StudySession> GetAll() => Sessions;
+    public IEnumerable<StudySession> GetAll()
+    {
+        // LINQ (Where, inside UpcomingOnly) filters out past sessions; IComparable<StudySession>
+        // (via CompareTo) lets List<T>.Sort() put what's left in start-time order with no comparer.
+        var upcoming = Sessions.UpcomingOnly().ToList();
+        upcoming.Sort();
+        return upcoming;
+    }
+
+    [HttpGet("summary")]
+    public IEnumerable<StudySessionSummary> GetSummaries() =>
+        Sessions.UpcomingOnly().Select(s => new StudySessionSummary(s.Course, s.Topic, s.StartsAt, s.SeatsAvailable));
 
     [HttpGet("{id:int}")]
     public ActionResult<StudySession> GetById(int id)

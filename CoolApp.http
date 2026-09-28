@@ -12,7 +12,13 @@ Accept: application/json
 GET {{HostAddress}}/api/studysessions/999
 Accept: application/json
 
+### Get lightweight session summaries (the immutable StudySessionSummary record - no id, no host)
+GET {{HostAddress}}/api/studysessions/summary
+Accept: application/json
+
 ### Create a new study session
+# startsAt carries an explicit "Z" (UTC) offset, same as the browser form now sends -
+# a bare "2026-09-23T18:00:00" would be interpreted as *this server's* local time.
 POST {{HostAddress}}/api/studysessions
 Content-Type: application/json
 
@@ -20,9 +26,22 @@ Content-Type: application/json
   "course": "Software Development I",
   "topic": "Testing your own API",
   "location": "MIF, room 401",
-  "startsAt": "2026-09-23T18:00:00",
+  "startsAt": "2026-09-23T18:00:00Z",
   "hostName": "You",
   "seatsAvailable": 4
+}
+
+### Create a session that's already full (seatsAvailable: 0 is valid - watch its "status")
+POST {{HostAddress}}/api/studysessions
+Content-Type: application/json
+
+{
+  "course": "Software Development I",
+  "topic": "Small informal recap, no more room",
+  "location": "MIF, room 401",
+  "startsAt": "2026-09-23T18:00:00Z",
+  "hostName": "You",
+  "seatsAvailable": 0
 }
 
 ### Update a study session
@@ -33,7 +52,7 @@ Content-Type: application/json
   "course": "Software Development I",
   "topic": "Pull request etiquette",
   "location": "MIF, room 401",
-  "startsAt": "2026-09-24T18:00:00",
+  "startsAt": "2026-09-24T18:00:00Z",
   "hostName": "Ieva",
   "seatsAvailable": 1
 }
@@ -49,7 +68,7 @@ Content-Type: application/json
   "course": "",
   "topic": "Testing validation",
   "location": "MIF, room 401",
-  "startsAt": "2020-01-01T18:00:00",
+  "startsAt": "2020-01-01T18:00:00Z",
   "hostName": "You",
-  "seatsAvailable": 0
+  "seatsAvailable": -1
 }
