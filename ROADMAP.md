@@ -28,6 +28,7 @@ Features:
 
 Requirement coverage still needed:
 - [ ] Persist sessions in a database with Entity Framework, instead of the in-memory list
+- [ ] Request/response DTOs (e.g. `CreateStudySessionDto`/`StudySessionDto`) separating the API contract from the EF entity - introduce alongside EF itself, once there's a real entity (with tracking/navigation properties) worth not leaking over the wire; `StudySessionSummary` (Lecture 04) is a lightweight preview of the same idea
 - [ ] A generic type/method (e.g. a generic `Repository<T>` used for `StudySession` and one other entity)
 - [ ] A custom exception type, thrown and handled meaningfully (e.g. `SessionFullException` when RSVP-ing to a full session)
 - [ ] `async`/`await` for all I/O (database calls, no synchronous DB access)
