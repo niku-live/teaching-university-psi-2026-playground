@@ -5,7 +5,11 @@ export class SessionSummaries extends Component {
 
   constructor(props) {
     super(props);
-    this.state = { summaries: [], loading: true, error: null };
+    this.state = { summaries: [], loading: true, error: null, minSeatsAvailable: '' };
+
+    this.handleFilterChange = this.handleFilterChange.bind(this);
+    this.handleFilterSubmit = this.handleFilterSubmit.bind(this);
+    this.handleFilterClear = this.handleFilterClear.bind(this);
   }
 
   componentDidMount() {
@@ -54,13 +58,37 @@ export class SessionSummaries extends Component {
       <div>
         <h1 id="tableLabel">Session Summaries</h1>
         <p>A lightweight view of upcoming study sessions from <code>GET /api/studysessions/summary</code> - course, topic, start time, seats left, and rating, but no host name or id.</p>
+
+        <form className="mb-3" onSubmit={this.handleFilterSubmit}>
+          <label className="form-label" htmlFor="summary-min-seats">Min seats available</label>
+          <div className="input-group" style={{ maxWidth: '24rem' }}>
+            <input
+              className="form-control"
+              id="summary-min-seats"
+              type="number"
+              min="0"
+              value={this.state.minSeatsAvailable}
+              onChange={this.handleFilterChange}
+            />
+            <button className="btn btn-secondary" type="submit">Apply</button>
+            <button className="btn btn-outline-secondary" type="button" onClick={this.handleFilterClear}>Clear</button>
+          </div>
+          <div className="form-text">
+            No course filter here on purpose - <code>GetSummaries</code> only ever declared <code>minSeatsAvailable</code>.
+          </div>
+        </form>
+
         {contents}
       </div>
     );
   }
 
-  async populateSummaries() {
-    const response = await fetch('api/studysessions/summary');
+  // Accepts minSeatsAvailable explicitly rather than always reading this.state, so
+  // handleFilterClear can fetch with the just-cleared value without racing setState's
+  // own async update.
+  async populateSummaries(minSeatsAvailable = this.state.minSeatsAvailable) {
+    const query = minSeatsAvailable !== '' ? `?minSeatsAvailable=${encodeURIComponent(minSeatsAvailable)}` : '';
+    const response = await fetch(`api/studysessions/summary${query}`);
     if (!response.ok) {
       this.setState({ loading: false, error: 'Could not load session summaries. Please try again.' });
       return;
@@ -68,5 +96,20 @@ export class SessionSummaries extends Component {
 
     const data = await response.json();
     this.setState({ summaries: data, loading: false });
+  }
+
+  handleFilterChange(event) {
+    this.setState({ minSeatsAvailable: event.target.value });
+  }
+
+  async handleFilterSubmit(event) {
+    event.preventDefault();
+    this.setState({ loading: true });
+    await this.populateSummaries();
+  }
+
+  async handleFilterClear() {
+    this.setState({ minSeatsAvailable: '', loading: true });
+    await this.populateSummaries('');
   }
 }

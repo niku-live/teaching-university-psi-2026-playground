@@ -10,16 +10,25 @@ const emptyForm = {
   seatsAvailable: 1
 };
 
+const emptyFilters = {
+  course: '',
+  minSeatsAvailable: '',
+  asOf: ''
+};
+
 export class StudySessions extends Component {
   static displayName = StudySessions.name;
 
   constructor(props) {
     super(props);
-    this.state = { sessions: [], loading: true, form: { ...emptyForm }, submitting: false, error: null, fieldErrors: {} };
+    this.state = { sessions: [], loading: true, form: { ...emptyForm }, filters: { ...emptyFilters }, submitting: false, error: null, fieldErrors: {} };
 
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
     this.rateSession = this.rateSession.bind(this);
+    this.handleFilterChange = this.handleFilterChange.bind(this);
+    this.handleFilterSubmit = this.handleFilterSubmit.bind(this);
+    this.handleFilterClear = this.handleFilterClear.bind(this);
   }
 
   componentDidMount() {
@@ -60,6 +69,30 @@ export class StudySessions extends Component {
       }
     }
     return errors;
+  }
+
+  // Mirrors GetAll's own three query parameters exactly - course, minSeatsAvailable,
+  // and asOf are all optional, so an empty filter just means "omit it" here too.
+  static buildSessionsQuery(filters) {
+    const params = new URLSearchParams();
+
+    if (filters.course.trim()) {
+      params.set('course', filters.course.trim());
+    }
+
+    if (filters.minSeatsAvailable !== '') {
+      params.set('minSeatsAvailable', filters.minSeatsAvailable);
+    }
+
+    if (filters.asOf) {
+      // Same reasoning as the create-session form: a bare datetime-local value has no
+      // timezone, so convert it to an explicit UTC instant before it becomes a query
+      // param, rather than leaving the server to guess.
+      params.set('asOf', new Date(filters.asOf).toISOString());
+    }
+
+    const query = params.toString();
+    return query ? `?${query}` : '';
   }
 
   static renderSessionsTable(sessions, onRate) {
@@ -138,6 +171,51 @@ export class StudySessions extends Component {
       <div>
         <h1 id="tableLabel">Study Sessions</h1>
         <p>Find a study session hosted by another student, or open a pull request to add your own.</p>
+
+        <form className="study-session-filters mb-3" onSubmit={this.handleFilterSubmit}>
+          <div className="row g-2 align-items-end">
+            <div className="col-auto">
+              <label className="form-label" htmlFor="filter-course">Course contains</label>
+              <input
+                className="form-control"
+                id="filter-course"
+                name="course"
+                value={this.state.filters.course}
+                onChange={this.handleFilterChange}
+              />
+            </div>
+            <div className="col-auto">
+              <label className="form-label" htmlFor="filter-minSeatsAvailable">Min seats available</label>
+              <input
+                className="form-control"
+                id="filter-minSeatsAvailable"
+                name="minSeatsAvailable"
+                type="number"
+                min="0"
+                value={this.state.filters.minSeatsAvailable}
+                onChange={this.handleFilterChange}
+              />
+            </div>
+            <div className="col-auto">
+              <label className="form-label" htmlFor="filter-asOf">Upcoming as of</label>
+              <input
+                className="form-control"
+                id="filter-asOf"
+                name="asOf"
+                type="datetime-local"
+                value={this.state.filters.asOf}
+                onChange={this.handleFilterChange}
+              />
+            </div>
+            <div className="col-auto">
+              <button className="btn btn-secondary" type="submit">Apply filters</button>
+            </div>
+            <div className="col-auto">
+              <button className="btn btn-link" type="button" onClick={this.handleFilterClear}>Clear</button>
+            </div>
+          </div>
+        </form>
+
         <div className="study-sessions-table">
           {contents}
         </div>
@@ -204,10 +282,33 @@ export class StudySessions extends Component {
     await this.populateStudySessions();
   }
 
-  async populateStudySessions() {
-    const response = await fetch('api/studysessions');
+  // Accepts filters explicitly rather than always reading this.state.filters, so
+  // handleFilterClear can fetch with the just-cleared values without racing
+  // setState's own async update.
+  async populateStudySessions(filters = this.state.filters) {
+    const query = StudySessions.buildSessionsQuery(filters);
+    const response = await fetch(`api/studysessions${query}`);
     const data = await response.json();
     this.setState({ sessions: data, loading: false });
+  }
+
+  handleFilterChange(event) {
+    const { name, value } = event.target;
+    this.setState(prevState => ({
+      filters: { ...prevState.filters, [name]: value }
+    }));
+  }
+
+  async handleFilterSubmit(event) {
+    event.preventDefault();
+    this.setState({ loading: true });
+    await this.populateStudySessions();
+  }
+
+  async handleFilterClear() {
+    const filters = { ...emptyFilters };
+    this.setState({ filters, loading: true });
+    await this.populateStudySessions(filters);
   }
 
   // The select is uncontrolled (defaultValue, not value) - React reuses each row's

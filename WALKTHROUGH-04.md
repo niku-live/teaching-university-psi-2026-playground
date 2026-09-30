@@ -1,6 +1,6 @@
 # Walkthrough 04: C# Language Features, and a Real Timezone Bug
 
-This is the step-by-step walkthrough behind [Lecture 04](https://github.com/niku-live/teaching-university-psi-2026/tree/main/Lecture04): closing out the rest of the Alpha requirement checklist (a `record`, an `enum`, named/optional arguments, an extension method, LINQ, and a standard .NET interface) using this week's C# Basics theory, fixing a real timezone bug using this week's Time theory, and a few follow-on additions that came out of the same lecture: a page for the summary endpoint, a `Rating` struct previewing Final's ratings feature, a real filter feature that gives named/optional arguments genuine (not just illustrative) call sites, and giving that rating a place in the UI - both to see (the summary page) and to set (the main sessions table). See [WALKTHROUGHS.md](WALKTHROUGHS.md) for the full list of per-lecture walkthroughs.
+This is the step-by-step walkthrough behind [Lecture 04](https://github.com/niku-live/teaching-university-psi-2026/tree/main/Lecture04): closing out the rest of the Alpha requirement checklist (a `record`, an `enum`, named/optional arguments, an extension method, LINQ, and a standard .NET interface) using this week's C# Basics theory, fixing a real timezone bug using this week's Time theory, and a few follow-on additions that came out of the same lecture: a page for the summary endpoint, a `Rating` struct previewing Final's ratings feature, a real filter feature that gives named/optional arguments genuine (not just illustrative) call sites, giving that rating a place in the UI (both to see, on the summary page, and to set, on the main sessions table), and filter controls on both pages that make the two endpoints' different parameters visible to an actual user, not just to someone reading the controller. See [WALKTHROUGHS.md](WALKTHROUGHS.md) for the full list of per-lecture walkthroughs.
 
 This assumes you already have a working project at the state described in [WALKTHROUGH-03.md](WALKTHROUGH-03.md) - client- and server-side validation on the create-session form. Apply these same steps to **your own team's project**, not just this repository - check `ROADMAP.md`'s "Requirement coverage still needed" list against your own project's actual code first; you may already have some of these covered by different means.
 
@@ -494,7 +494,49 @@ async rateSession(id, value) {
 
 (Bind it in the constructor alongside `handleChange`/`handleSubmit`.) The `<select>` is uncontrolled (`defaultValue`, not `value`) - React reuses each row's DOM node across re-renders since `key={session.id}` stays stable, so after picking a rating it keeps showing what was picked rather than snapping back to the placeholder. The number displayed to its left, refreshed by `populateStudySessions()`, is the actual persisted state; the `<select>` is just the input control.
 
-## 10. Try It
+## 10. Add Filter Controls to Both Pages
+
+Step 8's `course`/`minSeatsAvailable`/`asOf` and the summary endpoint's `minSeatsAvailable` have only been exercised via `.http` requests so far. Give each page real controls for its own endpoint's actual parameters - not the same form copy-pasted twice, since the two endpoints don't accept the same things.
+
+**`StudySessions.js`** gets all three, mirroring `GetAll` exactly:
+
+```js
+static buildSessionsQuery(filters) {
+  const params = new URLSearchParams();
+
+  if (filters.course.trim()) {
+    params.set('course', filters.course.trim());
+  }
+
+  if (filters.minSeatsAvailable !== '') {
+    params.set('minSeatsAvailable', filters.minSeatsAvailable);
+  }
+
+  if (filters.asOf) {
+    params.set('asOf', new Date(filters.asOf).toISOString());
+  }
+
+  const query = params.toString();
+  return query ? `?${query}` : '';
+}
+```
+
+Same timezone reasoning as the create-session form applies to `asOf`: a `datetime-local` input has no offset, so it's converted to an explicit UTC instant before it becomes a query string, not left for the server to guess. Add a small filter form above the table (three inputs - text, number, datetime-local - plus "Apply filters"/"Clear" buttons), state to hold the three values, and change `populateStudySessions` to build its URL from them:
+
+```js
+async populateStudySessions(filters = this.state.filters) {
+  const query = StudySessions.buildSessionsQuery(filters);
+  const response = await fetch(`api/studysessions${query}`);
+  const data = await response.json();
+  this.setState({ sessions: data, loading: false });
+}
+```
+
+`populateStudySessions` takes `filters` as a parameter with `this.state.filters` as its default, rather than always reading `this.state` directly - `handleFilterClear` needs to fetch with the just-cleared values immediately, and `setState` doesn't update `this.state` synchronously, so reading it right after calling `setState` would still see the old values.
+
+**`SessionSummaries.js`** gets only `minSeatsAvailable` - a single number input, "Apply"/"Clear" buttons, no course field at all, with a line of UI copy saying so directly: *"No course filter here on purpose - `GetSummaries` only ever declared `minSeatsAvailable`."* This is step 8's named-argument point made visible to an actual user of the page, not just to someone reading the controller.
+
+## 11. Try It
 
 Restart the app (the model changes need a rebuild):
 
@@ -504,6 +546,7 @@ Restart the app (the model changes need a rebuild):
 - **`asOf`**: `GET /api/studysessions?asOf=` a date far enough in the future that today's seeded sessions have already "started" by then, and confirm the list comes back empty (or missing whichever sessions started before that moment).
 - **The timezone fix**: open `/study-sessions`, create a session through the form, and confirm it appears with the right local time in the table (`toLocaleString()` on the frontend already converts back to the browser's own timezone for display). Then send a `.http` request with an explicit non-UTC offset, e.g. `"startsAt": "2026-10-24T20:00:00+02:00"`, and one with `Z` for the equivalent UTC instant, and confirm both are treated identically by the validation (same moment in time, regardless of which offset represents it).
 - **Ratings**: `PUT` a rating of `4` onto a session via `CoolApp.http`, then `GET` it back and confirm `"hostRating": { "value": 4 }` appears. `PUT` a rating of `7` and confirm `400 Bad Request`. Then do it from the UI instead: open `/study-sessions`, pick a value from a session's "Rate..." dropdown, and confirm the number next to it updates. Open `/session-summaries` and confirm the same rating shows there too, read-only.
+- **Filter controls**: on `/study-sessions`, type part of a course name and click "Apply filters" - confirm the table narrows to matching sessions; do the same with a minimum seats value; pick a future `asOf` date and confirm sessions starting before it disappear; click "Clear" and confirm everything comes back. On `/session-summaries`, confirm there's only ever a seats field to filter by - no course input at all - matching what `GetSummaries` actually accepts.
 
 ## Next Steps
 
