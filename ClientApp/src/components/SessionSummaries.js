@@ -21,17 +21,21 @@ export class SessionSummaries extends Component {
             <th>Topic</th>
             <th>Starts at</th>
             <th>Seats left</th>
+            <th>Rating</th>
           </tr>
         </thead>
         <tbody>
           {/* StudySessionSummary is an immutable record with no Id, so there's no
-              stable identity to key on besides its position in the list. */}
+              stable identity to key on besides its position in the list - and no
+              way to act on a specific row either. Rating is shown here read-only;
+              giving one happens on the Study Sessions page, which has a real id. */}
           {summaries.map((summary, index) =>
             <tr key={index}>
               <td>{summary.course}</td>
               <td>{summary.topic}</td>
               <td>{new Date(summary.startsAt).toLocaleString()}</td>
               <td>{summary.seatsAvailable}</td>
+              <td>{summary.hostRating ? `${summary.hostRating.value}/5` : 'Not rated'}</td>
             </tr>
           )}
         </tbody>
@@ -49,7 +53,7 @@ export class SessionSummaries extends Component {
     return (
       <div>
         <h1 id="tableLabel">Session Summaries</h1>
-        <p>A lightweight view of upcoming study sessions from <code>GET /api/studysessions/summary</code> - just course, topic, start time, and seats left, no host name or id.</p>
+        <p>A lightweight view of upcoming study sessions from <code>GET /api/studysessions/summary</code> - course, topic, start time, seats left, and rating, but no host name or id.</p>
         {contents}
       </div>
     );

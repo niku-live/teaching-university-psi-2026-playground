@@ -19,6 +19,7 @@ export class StudySessions extends Component {
 
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
+    this.rateSession = this.rateSession.bind(this);
   }
 
   componentDidMount() {
@@ -61,7 +62,7 @@ export class StudySessions extends Component {
     return errors;
   }
 
-  static renderSessionsTable(sessions) {
+  static renderSessionsTable(sessions, onRate) {
     return (
       <table className="table table-striped" aria-labelledby="tableLabel">
         <thead>
@@ -73,6 +74,7 @@ export class StudySessions extends Component {
             <th>Host</th>
             <th>Seats left</th>
             <th>Status</th>
+            <th>Rating</th>
           </tr>
         </thead>
         <tbody>
@@ -85,6 +87,22 @@ export class StudySessions extends Component {
               <td>{session.hostName}</td>
               <td>{session.seatsAvailable}</td>
               <td>{session.status}</td>
+              <td>
+                {session.hostRating ? `${session.hostRating.value}/5` : 'Not rated'}
+                {' '}
+                <select
+                  aria-label={`Rate "${session.topic}"`}
+                  defaultValue=""
+                  onChange={event => onRate(session.id, event.target.value)}
+                >
+                  <option value="" disabled>Rate...</option>
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4</option>
+                  <option value="5">5</option>
+                </select>
+              </td>
             </tr>
           )}
         </tbody>
@@ -114,7 +132,7 @@ export class StudySessions extends Component {
   render() {
     let contents = this.state.loading
       ? <p><em>Loading...</em></p>
-      : StudySessions.renderSessionsTable(this.state.sessions);
+      : StudySessions.renderSessionsTable(this.state.sessions, this.rateSession);
 
     return (
       <div>
@@ -190,5 +208,26 @@ export class StudySessions extends Component {
     const response = await fetch('api/studysessions');
     const data = await response.json();
     this.setState({ sessions: data, loading: false });
+  }
+
+  // The select is uncontrolled (defaultValue, not value) - React reuses each row's
+  // DOM node across re-renders since key={session.id} stays stable, so it keeps
+  // showing whatever the person just picked rather than resetting to "Rate...".
+  // The number to its left, refreshed by populateStudySessions() below, is what's
+  // actually persisted server-side - the select itself is just the input control.
+  async rateSession(id, value) {
+    if (!value) {
+      return;
+    }
+
+    const response = await fetch(`api/studysessions/${id}/rating`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ value: Number(value) })
+    });
+
+    if (response.ok) {
+      await this.populateStudySessions();
+    }
   }
 }

@@ -66,7 +66,7 @@ public class StudySessionsController : ControllerBase
         // isn't optional polish here, it's the only way to reach the parameter you want
         // without also having to know and restate the one you don't.
         Sessions.UpcomingOnly().Filter(minSeatsAvailable: minSeatsAvailable)
-            .Select(s => new StudySessionSummary(s.Course, s.Topic, s.StartsAt, s.SeatsAvailable));
+            .Select(s => new StudySessionSummary(s.Course, s.Topic, s.StartsAt, s.SeatsAvailable, s.HostRating));
 
     [HttpGet("{id:int}")]
     public ActionResult<StudySession> GetById(int id)

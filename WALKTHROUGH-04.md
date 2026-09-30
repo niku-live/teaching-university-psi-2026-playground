@@ -1,6 +1,6 @@
 # Walkthrough 04: C# Language Features, and a Real Timezone Bug
 
-This is the step-by-step walkthrough behind [Lecture 04](https://github.com/niku-live/teaching-university-psi-2026/tree/main/Lecture04): closing out the rest of the Alpha requirement checklist (a `record`, an `enum`, named/optional arguments, an extension method, LINQ, and a standard .NET interface) using this week's C# Basics theory, fixing a real timezone bug using this week's Time theory, and a few follow-on additions that came out of the same lecture: a page for the summary endpoint, a `Rating` struct previewing Final's ratings feature, and a real filter feature that gives named/optional arguments genuine (not just illustrative) call sites. See [WALKTHROUGHS.md](WALKTHROUGHS.md) for the full list of per-lecture walkthroughs.
+This is the step-by-step walkthrough behind [Lecture 04](https://github.com/niku-live/teaching-university-psi-2026/tree/main/Lecture04): closing out the rest of the Alpha requirement checklist (a `record`, an `enum`, named/optional arguments, an extension method, LINQ, and a standard .NET interface) using this week's C# Basics theory, fixing a real timezone bug using this week's Time theory, and a few follow-on additions that came out of the same lecture: a page for the summary endpoint, a `Rating` struct previewing Final's ratings feature, a real filter feature that gives named/optional arguments genuine (not just illustrative) call sites, and giving that rating a place in the UI - both to see (the summary page) and to set (the main sessions table). See [WALKTHROUGHS.md](WALKTHROUGHS.md) for the full list of per-lecture walkthroughs.
 
 This assumes you already have a working project at the state described in [WALKTHROUGH-03.md](WALKTHROUGH-03.md) - client- and server-side validation on the create-session form. Apply these same steps to **your own team's project**, not just this repository - check `ROADMAP.md`'s "Requirement coverage still needed" list against your own project's actual code first; you may already have some of these covered by different means.
 
@@ -413,17 +413,98 @@ The contrast is the point:
 
 Add a few `.http` examples: `GET .../api/studysessions?course=software`, `?minSeatsAvailable=4`, `?asOf=2026-10-15T00:00:00Z`, and `GET .../api/studysessions/summary?minSeatsAvailable=4`.
 
-## 9. Try It
+## 9. Show Ratings in the Summary View, and Add a Way to Give One
+
+Two loose ends from steps 6 and 7: the summary endpoint doesn't include `HostRating` yet, and nothing in the UI can actually call the rating endpoint - `CoolApp.http` is the only way to rate a session so far.
+
+**Show it, read-only, in the summary.** `StudySessionSummary` predates `Rating` (step 2 came before step 7), so it never had a rating field to include. Add one now:
+
+```csharp
+public record StudySessionSummary(string Course, string Topic, DateTimeOffset StartsAt, int SeatsAvailable, Rating? HostRating);
+```
+
+Pass it through in `GetSummaries`:
+
+```csharp
+Sessions.UpcomingOnly().Filter(minSeatsAvailable: minSeatsAvailable)
+    .Select(s => new StudySessionSummary(s.Course, s.Topic, s.StartsAt, s.SeatsAvailable, s.HostRating));
+```
+
+And render it in `SessionSummaries.js`'s table (a `Rating` column showing `4/5` or `"Not rated"`). This record still has no `Id` - it can *show* a rating, but there's nothing here to act *on*, which is exactly why the interactive part goes elsewhere.
+
+**Give one, from the Study Sessions table.** `StudySessions.js` already has each row's real `id`, so that's where "rate this session" belongs. Add a `Rating` column with the current value plus a `<select>`:
+
+```jsx
+static renderSessionsTable(sessions, onRate) {
+  return (
+    <table className="table table-striped" aria-labelledby="tableLabel">
+      <thead>
+        <tr>
+          {/* ...existing headers... */}
+          <th>Rating</th>
+        </tr>
+      </thead>
+      <tbody>
+        {sessions.map(session =>
+          <tr key={session.id}>
+            {/* ...existing cells... */}
+            <td>
+              {session.hostRating ? `${session.hostRating.value}/5` : 'Not rated'}
+              {' '}
+              <select
+                aria-label={`Rate "${session.topic}"`}
+                defaultValue=""
+                onChange={event => onRate(session.id, event.target.value)}
+              >
+                <option value="" disabled>Rate...</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+              </select>
+            </td>
+          </tr>
+        )}
+      </tbody>
+    </table>
+  );
+}
+```
+
+`renderSessionsTable` gains a second parameter, `onRate` - a callback threaded down from `render()` (`StudySessions.renderSessionsTable(this.state.sessions, this.rateSession)`), since the method is `static` and has no `this` of its own to call an instance method from directly. The handler itself:
+
+```js
+async rateSession(id, value) {
+  if (!value) {
+    return;
+  }
+
+  const response = await fetch(`api/studysessions/${id}/rating`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ value: Number(value) })
+  });
+
+  if (response.ok) {
+    await this.populateStudySessions();
+  }
+}
+```
+
+(Bind it in the constructor alongside `handleChange`/`handleSubmit`.) The `<select>` is uncontrolled (`defaultValue`, not `value`) - React reuses each row's DOM node across re-renders since `key={session.id}` stays stable, so after picking a rating it keeps showing what was picked rather than snapping back to the placeholder. The number displayed to its left, refreshed by `populateStudySessions()`, is the actual persisted state; the `<select>` is just the input control.
+
+## 10. Try It
 
 Restart the app (the model changes need a rebuild):
 
 - **The enum**: use `CoolApp.http` to `POST` a session with `"seatsAvailable": 0`, then `GET /api/studysessions` and confirm its `status` reads `"Full"` while the others read `"Scheduled"`.
-- **The summary endpoint**: `GET /api/studysessions/summary` and confirm you get back `course`/`topic`/`startsAt`/`seatsAvailable` only - no `id`, no `hostName`. Open `/session-summaries` in the browser and confirm the same data renders as a table.
+- **The summary endpoint**: `GET /api/studysessions/summary` and confirm you get back `course`/`topic`/`startsAt`/`seatsAvailable`/`hostRating` - no `id`, no `hostName`. Open `/session-summaries` in the browser and confirm the same data renders as a table, rating column included.
 - **Filtering and sorting**: create a few sessions with different `startsAt` values and confirm `GET /api/studysessions` always comes back sorted soonest-first, regardless of the order you created them in. Try `?course=...` and `?minSeatsAvailable=...` against both `/api/studysessions` and `/api/studysessions/summary` (the latter only accepts `minSeatsAvailable` - confirm a `?course=...` on it is simply ignored, since `GetSummaries` never declared that parameter). To see the time-filtering side specifically: the model's own validation correctly refuses a past `startsAt` on both `POST` and `PUT`, so there's no supported way to sneak a past session in through the API to prove it disappears - temporarily comment out the `StartsAt <= DateTimeOffset.UtcNow` check in `Validate`, `POST` a session dated last year, confirm it's missing from `GetAll` but still present if you call `Sessions` directly (e.g. via a quick `GetById`), then restore the check.
 - **`asOf`**: `GET /api/studysessions?asOf=` a date far enough in the future that today's seeded sessions have already "started" by then, and confirm the list comes back empty (or missing whichever sessions started before that moment).
 - **The timezone fix**: open `/study-sessions`, create a session through the form, and confirm it appears with the right local time in the table (`toLocaleString()` on the frontend already converts back to the browser's own timezone for display). Then send a `.http` request with an explicit non-UTC offset, e.g. `"startsAt": "2026-10-24T20:00:00+02:00"`, and one with `Z` for the equivalent UTC instant, and confirm both are treated identically by the validation (same moment in time, regardless of which offset represents it).
-- **Ratings**: `PUT` a rating of `4` onto a session, then `GET` it back and confirm `"hostRating": { "value": 4 }` appears. `PUT` a rating of `7` and confirm `400 Bad Request`.
+- **Ratings**: `PUT` a rating of `4` onto a session via `CoolApp.http`, then `GET` it back and confirm `"hostRating": { "value": 4 }` appears. `PUT` a rating of `7` and confirm `400 Bad Request`. Then do it from the UI instead: open `/study-sessions`, pick a value from a session's "Rate..." dropdown, and confirm the number next to it updates. Open `/session-summaries` and confirm the same rating shows there too, read-only.
 
 ## Next Steps
 
-Once this is done, update `ROADMAP.md`: check off the rest of your Alpha requirement checklist (steps 1-5), note the ratings building block under Final's ratings feature without checking it off (step 7 is a preview - who's allowed to rate, preventing duplicate ratings, and rolling ratings up across a host's sessions are still missing), and check off "Filter sessions by course" under Beta's Features (step 8 - a real feature landed early, not just a requirement-coverage checkbox). Update `README.md`'s "Current Examples" section to match. See [WALKTHROUGHS.md](WALKTHROUGHS.md) for later lectures' walkthroughs as they're added.
+Once this is done, update `ROADMAP.md`: check off the rest of your Alpha requirement checklist (steps 1-5), note the ratings building block under Final's ratings feature without checking it off (steps 7 and 9 are a preview - who's allowed to rate, preventing duplicate ratings, and rolling ratings up across a host's sessions are still missing), and check off "Filter sessions by course" under Beta's Features (step 8 - a real feature landed early, not just a requirement-coverage checkbox). Update `README.md`'s "Current Examples" section to match. See [WALKTHROUGHS.md](WALKTHROUGHS.md) for later lectures' walkthroughs as they're added.
