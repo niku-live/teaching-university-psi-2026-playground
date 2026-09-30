@@ -24,7 +24,7 @@ Requirement coverage still needed:
 
 Features:
 - [ ] Join / RSVP to a session and track remaining seats
-- [ ] Filter sessions by course
+- [x] Filter sessions by course
 
 Requirement coverage still needed:
 - [ ] Persist sessions in a database with Entity Framework, instead of the in-memory list

@@ -34,18 +34,39 @@ public class StudySessionsController : ControllerBase
     };
 
     [HttpGet]
-    public IEnumerable<StudySession> GetAll()
+    public IEnumerable<StudySession> GetAll(
+        [FromQuery] string? course = null,
+        [FromQuery] int? minSeatsAvailable = null,
+        [FromQuery] DateTimeOffset? asOf = null)
     {
-        // LINQ (Where, inside UpcomingOnly) filters out past sessions; IComparable<StudySession>
-        // (via CompareTo) lets List<T>.Sort() put what's left in start-time order with no comparer.
-        var upcoming = Sessions.UpcomingOnly().ToList();
+        // asOf: a real (not just documented) use of UpcomingOnly's optional argument -
+        // omit it for "upcoming as of right now" (every other call site does this), or
+        // pass ?asOf=... to preview what the list will look like at a future moment.
+        //
+        // course/minSeatsAvailable are supplied in Filter's own declared order here, so
+        // naming them is a readability choice, not a requirement - contrast GetSummaries
+        // below, which skips the first one entirely and *must* name the second.
+        //
+        // LINQ (Where, inside UpcomingOnly/Filter) filters; IComparable<StudySession>
+        // (via CompareTo) lets List<T>.Sort() put what's left in start-time order with
+        // no comparer.
+        var upcoming = Sessions
+            .UpcomingOnly(asOf: asOf)
+            .Filter(course, minSeatsAvailable)
+            .ToList();
         upcoming.Sort();
         return upcoming;
     }
 
     [HttpGet("summary")]
-    public IEnumerable<StudySessionSummary> GetSummaries() =>
-        Sessions.UpcomingOnly().Select(s => new StudySessionSummary(s.Course, s.Topic, s.StartsAt, s.SeatsAvailable));
+    public IEnumerable<StudySessionSummary> GetSummaries([FromQuery] int? minSeatsAvailable = null) =>
+        // This endpoint deliberately never exposes a course filter - only minSeatsAvailable.
+        // Filter(minSeatsAvailable: minSeatsAvailable) skips `course` (Filter's first
+        // parameter) entirely: there is no positional way to write that call. Naming
+        // isn't optional polish here, it's the only way to reach the parameter you want
+        // without also having to know and restate the one you don't.
+        Sessions.UpcomingOnly().Filter(minSeatsAvailable: minSeatsAvailable)
+            .Select(s => new StudySessionSummary(s.Course, s.Topic, s.StartsAt, s.SeatsAvailable));
 
     [HttpGet("{id:int}")]
     public ActionResult<StudySession> GetById(int id)

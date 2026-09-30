@@ -123,5 +123,7 @@ npm run build
 - `StartsAt` is a `DateTimeOffset`, not a bare `DateTime` - the API and the browser form both deal in explicit, unambiguous instants instead of a timestamp whose timezone has to be guessed
 - A `/session-summaries` page rendering `GET /api/studysessions/summary`'s results, so the endpoint has a real consumer beyond `CoolApp.http`
 - A `Rating` value type (a plain `struct`, not a `record struct` - no built-in `==`) enforcing 1-5 at construction, plus a per-session `HostRating` set via `PUT /api/studysessions/{id}/rating` - an early building block for Final's ratings feature
+- `GET /api/studysessions` filters by course and minimum seats available (Beta's "Filter sessions by course" feature), and can preview a future moment via `?asOf=...` - a real, non-default use of `UpcomingOnly`'s optional argument
+- `StudySessionExtensions.Filter()`, where `GET /api/studysessions/summary` calling `Filter(minSeatsAvailable: ...)` shows named arguments being *necessary*, not just readable: skipping `course` (Filter's first parameter) to reach the second has no positional syntax at all
 
 The repository will change throughout the semester. Use Git history to compare lecture stages and understand why each change was introduced.

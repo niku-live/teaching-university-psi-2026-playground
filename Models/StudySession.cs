@@ -40,7 +40,34 @@ public class StudySession : IValidatableObject, IComparable<StudySession>
 
     // Lets sessions sort by start time via List<T>.Sort() or Array.Sort(), with
     // no comparer to pass in - the type itself defines what "in order" means.
-    public int CompareTo(StudySession? other) => StartsAt.CompareTo(other?.StartsAt ?? default);
+    //
+    // IComparable<T>.CompareTo's contract only cares about the *sign* of the
+    // result, never its exact magnitude: negative means "this instance sorts
+    // before other," zero means "equal for sorting purposes," positive means
+    // "this instance sorts after other." Written with explicit branches
+    // returning -1/0/1 (rather than the one-liner `StartsAt.CompareTo(other.StartsAt)`)
+    // so that mapping is visible here, not hidden inside DateTimeOffset's own
+    // CompareTo.
+    public int CompareTo(StudySession? other)
+    {
+        if (other is null)
+        {
+            // By convention, any non-null instance sorts after a null one.
+            return 1;
+        }
+
+        if (StartsAt < other.StartsAt)
+        {
+            return -1;
+        }
+
+        if (StartsAt > other.StartsAt)
+        {
+            return 1;
+        }
+
+        return 0;
+    }
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {

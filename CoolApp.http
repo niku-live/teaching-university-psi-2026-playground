@@ -88,3 +88,19 @@ Content-Type: application/json
 {
   "value": 7
 }
+
+### Filter sessions by course (partial, case-insensitive match)
+GET {{HostAddress}}/api/studysessions?course=software
+Accept: application/json
+
+### Filter sessions by minimum seats available
+GET {{HostAddress}}/api/studysessions?minSeatsAvailable=4
+Accept: application/json
+
+### Preview what's upcoming as of a future moment (asOf), instead of right now
+GET {{HostAddress}}/api/studysessions?asOf=2026-10-15T00:00:00Z
+Accept: application/json
+
+### Summaries filtered by minimum seats available only - there's no course filter here on purpose
+GET {{HostAddress}}/api/studysessions/summary?minSeatsAvailable=4
+Accept: application/json
