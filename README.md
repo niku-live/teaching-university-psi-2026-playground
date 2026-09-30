@@ -121,5 +121,6 @@ npm run build
 - `StudySessionExtensions.UpcomingOnly()`, an extension method using LINQ to filter out past sessions, with an optional `asOf` parameter for testability
 - `StudySession` implements `IComparable<StudySession>`, so `List<StudySession>.Sort()` orders sessions by start time with no comparer needed
 - `StartsAt` is a `DateTimeOffset`, not a bare `DateTime` - the API and the browser form both deal in explicit, unambiguous instants instead of a timestamp whose timezone has to be guessed
+- A `/session-summaries` page rendering `GET /api/studysessions/summary`'s results, so the endpoint has a real consumer beyond `CoolApp.http`
 
 The repository will change throughout the semester. Use Git history to compare lecture stages and understand why each change was introduced.
