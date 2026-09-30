@@ -93,4 +93,20 @@ public class StudySessionsController : ControllerBase
         Sessions.Remove(existing);
         return NoContent();
     }
+
+    [HttpPut("{id:int}/rating")]
+    public IActionResult RateSession(int id, RatingSubmission submission)
+    {
+        var existing = Sessions.FirstOrDefault(s => s.Id == id);
+        if (existing is null)
+        {
+            return NotFound();
+        }
+
+        // [Range] on RatingSubmission.Value already rejected anything outside 1-5
+        // before this line runs - the Rating constructor re-checks anyway, since a
+        // Rating that's out of range has to be impossible everywhere, not just here.
+        existing.HostRating = new Rating(submission.Value);
+        return NoContent();
+    }
 }

@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace CoolApp.Models;
 
@@ -26,6 +27,16 @@ public class StudySession : IValidatableObject, IComparable<StudySession>
     public int SeatsAvailable { get; set; }
 
     public SessionStatus Status => SeatsAvailable > 0 ? SessionStatus.Scheduled : SessionStatus.Full;
+
+    // Nullable, not just because "not rated yet" is a real state (Rating? = null
+    // until someone rates it), but because Rating's own constructor would throw if
+    // asked to represent "no rating" as some sentinel int (e.g. 0) instead.
+    //
+    // [BindNever] keeps this out of Create/Update's model binding entirely - it's
+    // only ever set server-side, via RateSession's already-validated RatingSubmission,
+    // not by a client just including "hostRating" in a POST/PUT body.
+    [BindNever]
+    public Rating? HostRating { get; set; }
 
     // Lets sessions sort by start time via List<T>.Sort() or Array.Sort(), with
     // no comparer to pass in - the type itself defines what "in order" means.

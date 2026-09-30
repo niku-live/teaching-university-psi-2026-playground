@@ -72,3 +72,19 @@ Content-Type: application/json
   "hostName": "You",
   "seatsAvailable": -1
 }
+
+### Rate a session (watch "hostRating" appear on the next GET)
+PUT {{HostAddress}}/api/studysessions/1/rating
+Content-Type: application/json
+
+{
+  "value": 4
+}
+
+### Rate a session with an invalid value (expect 400 Bad Request)
+PUT {{HostAddress}}/api/studysessions/1/rating
+Content-Type: application/json
+
+{
+  "value": 7
+}

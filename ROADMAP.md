@@ -40,13 +40,17 @@ Requirement coverage still needed:
 Features:
 - [ ] User accounts, so sessions are tied to a real host
 - [ ] Notifications/reminders before a session starts
-- [ ] Session ratings, so good hosts stand out
+- [ ] Session ratings, so good hosts stand out (early building block landed: a `Rating` value type + a per-session `HostRating`, `PUT /api/studysessions/{id}/rating` - still missing who's allowed to rate, preventing duplicate ratings, and rolling ratings up across a host's sessions)
 
 Requirement coverage still needed:
 - [ ] Entity Framework migrations, run automatically
 - [ ] Unit and integration test coverage of at least 80%
 - [ ] A CI pipeline gating pull requests (tests + at least one extra gate)
 - [ ] Live metrics/monitoring (OpenTelemetry or similar)
+
+## Future Ideas (not yet scheduled to a phase)
+
+- Location-based search ("sessions near me") - would need a `Coordinates` value type (e.g. `record struct Coordinates(double Latitude, double Longitude)`) replacing or augmenting `Location`'s free-text string, plus real geocoding/distance-calculation data this demo doesn't currently have.
 
 ## Non-goals (for this demo)
 
