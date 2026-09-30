@@ -1,6 +1,6 @@
 # Walkthrough 04: C# Language Features, and a Real Timezone Bug
 
-This is the step-by-step walkthrough behind [Lecture 04](https://github.com/niku-live/teaching-university-psi-2026/tree/main/Lecture04): closing out the rest of the Alpha requirement checklist (a `record`, an `enum`, named/optional arguments, an extension method, LINQ, and a standard .NET interface) using this week's C# Basics theory, fixing a real timezone bug using this week's Time theory, and a few follow-on additions that came out of the same lecture: a page for the summary endpoint, a real filter feature that gives named/optional arguments genuine (not just illustrative) call sites, and a `Rating` struct previewing Final's ratings feature. See [WALKTHROUGHS.md](WALKTHROUGHS.md) for the full list of per-lecture walkthroughs.
+This is the step-by-step walkthrough behind [Lecture 04](https://github.com/niku-live/teaching-university-psi-2026/tree/main/Lecture04): closing out the rest of the Alpha requirement checklist (a `record`, an `enum`, named/optional arguments, an extension method, LINQ, and a standard .NET interface) using this week's C# Basics theory, fixing a real timezone bug using this week's Time theory, and a few follow-on additions that came out of the same lecture: a page for the summary endpoint, a `Rating` struct previewing Final's ratings feature, and a real filter feature that gives named/optional arguments genuine (not just illustrative) call sites. See [WALKTHROUGHS.md](WALKTHROUGHS.md) for the full list of per-lecture walkthroughs.
 
 This assumes you already have a working project at the state described in [WALKTHROUGH-03.md](WALKTHROUGH-03.md) - client- and server-side validation on the create-session form. Apply these same steps to **your own team's project**, not just this repository - check `ROADMAP.md`'s "Requirement coverage still needed" list against your own project's actual code first; you may already have some of these covered by different means.
 
@@ -80,7 +80,7 @@ A few things stacked into this one method:
 
 - It's an **extension method** - `this IEnumerable<StudySession> sessions` as the first parameter means any `IEnumerable<StudySession>` gets a `.UpcomingOnly()` method, the same way `.Where()` and `.Select()` are extension methods on `IEnumerable<T>` themselves.
 - It uses **LINQ** (`Where`) to do the actual filtering.
-- `asOf` is an **optional argument** (`= null`) - call `sessions.UpcomingOnly()` for "right now," or `sessions.UpcomingOnly(asOf: someFixedDate)` (a **named argument**) when you need a fixed, repeatable point in time instead of the real clock. Step 7 below gives this a genuine caller (a `?asOf=...` query parameter), not just a hypothetical one.
+- `asOf` is an **optional argument** (`= null`) - call `sessions.UpcomingOnly()` for "right now," or `sessions.UpcomingOnly(asOf: someFixedDate)` (a **named argument**) when you need a fixed, repeatable point in time instead of the real clock. Step 8 below gives this a genuine caller (a `?asOf=...` query parameter), not just a hypothetical one.
 
 Use it in `GetAll` and `GetSummaries` so the list only ever shows sessions that haven't started yet:
 
@@ -272,67 +272,7 @@ export class SessionSummaries extends Component {
 
 Wire it up: add `{ path: '/session-summaries', element: <SessionSummaries /> }` to `AppRoutes.js` (alongside the existing `/study-sessions` route), and a matching `<NavLink tag={Link} className="text-dark" to="/session-summaries">Summaries</NavLink>` to `NavMenu.js`.
 
-## 7. Filter Sessions, and Use Named/Optional Arguments for Real
-
-Two things so far have been true only in theory: step 3's `asOf` optional argument has never been called with a real value (every call site just omits it), and nothing yet forces a named argument - it's always been a readability choice. Fix both by adding a real filter, which also happens to close out Beta's "Filter sessions by course" feature early.
-
-Add `Filter` to `Extensions/StudySessionExtensions.cs`:
-
-```csharp
-// Two independent, optional filters. Skipping the first to reach only the second
-// (Filter(minSeatsAvailable: 2)) isn't just a style choice - C# has no positional
-// syntax to "skip" an argument, so naming is the only way to reach a later optional
-// parameter without also committing to (and hardcoding) an earlier one's default.
-public static IEnumerable<StudySession> Filter(
-    this IEnumerable<StudySession> sessions,
-    string? course = null,
-    int? minSeatsAvailable = null)
-{
-    if (course is not null)
-    {
-        sessions = sessions.Where(session => session.Course.Contains(course, StringComparison.OrdinalIgnoreCase));
-    }
-
-    if (minSeatsAvailable is not null)
-    {
-        sessions = sessions.Where(session => session.SeatsAvailable >= minSeatsAvailable);
-    }
-
-    return sessions;
-}
-```
-
-Wire it into both endpoints, but *differently on purpose*:
-
-```csharp
-[HttpGet]
-public IEnumerable<StudySession> GetAll(
-    [FromQuery] string? course = null,
-    [FromQuery] int? minSeatsAvailable = null,
-    [FromQuery] DateTimeOffset? asOf = null)
-{
-    var upcoming = Sessions
-        .UpcomingOnly(asOf: asOf)
-        .Filter(course, minSeatsAvailable)
-        .ToList();
-    upcoming.Sort();
-    return upcoming;
-}
-
-[HttpGet("summary")]
-public IEnumerable<StudySessionSummary> GetSummaries([FromQuery] int? minSeatsAvailable = null) =>
-    Sessions.UpcomingOnly().Filter(minSeatsAvailable: minSeatsAvailable)
-        .Select(s => new StudySessionSummary(s.Course, s.Topic, s.StartsAt, s.SeatsAvailable));
-```
-
-The contrast is the point:
-
-- `GetAll` calls `.UpcomingOnly(asOf: asOf)` with a **real, non-default value** now - pass `?asOf=2026-10-15T00:00:00Z` to preview what's upcoming at a future moment instead of right now. It also calls `Filter(course, minSeatsAvailable)` **positionally** - both values are supplied in `Filter`'s own declared order, so naming them would be a readability choice, not a requirement.
-- `GetSummaries` deliberately never exposes a course filter, only `minSeatsAvailable`. `Filter(minSeatsAvailable: minSeatsAvailable)` **skips `course` entirely** - `Filter`'s first parameter. There is no positional way to write that call: you'd have to either name `minSeatsAvailable`, or pass `null` explicitly for `course` first. This is the real "named arguments aren't just visibility" moment - it's the only way to reach a later optional parameter without also committing to (and hardcoding) the one you're skipping.
-
-Add a few `.http` examples: `GET .../api/studysessions?course=software`, `?minSeatsAvailable=4`, `?asOf=2026-10-15T00:00:00Z`, and `GET .../api/studysessions/summary?minSeatsAvailable=4`.
-
-## 8. Add a Rating Value Type
+## 7. Add a Rating Value Type
 
 A struct hasn't shown up in this codebase yet - `SessionStatus` is an `enum`, `StudySessionSummary` a `record`. Add one, previewing Final's "Session ratings" feature. `Models/Rating.cs`:
 
@@ -413,6 +353,66 @@ public IActionResult RateSession(int id, RatingSubmission submission)
 
 Add `.http` examples: `PUT .../api/studysessions/1/rating` with `{ "value": 4 }` (valid), and with `{ "value": 7 }` (expect `400 Bad Request`).
 
+## 8. Filter Sessions, and Use Named/Optional Arguments for Real
+
+Two things so far have been true only in theory: step 3's `asOf` optional argument has never been called with a real value (every call site just omits it), and nothing yet forces a named argument - it's always been a readability choice. Fix both by adding a real filter, which also happens to close out Beta's "Filter sessions by course" feature early.
+
+Add `Filter` to `Extensions/StudySessionExtensions.cs`:
+
+```csharp
+// Two independent, optional filters. Skipping the first to reach only the second
+// (Filter(minSeatsAvailable: 2)) isn't just a style choice - C# has no positional
+// syntax to "skip" an argument, so naming is the only way to reach a later optional
+// parameter without also committing to (and hardcoding) an earlier one's default.
+public static IEnumerable<StudySession> Filter(
+    this IEnumerable<StudySession> sessions,
+    string? course = null,
+    int? minSeatsAvailable = null)
+{
+    if (course is not null)
+    {
+        sessions = sessions.Where(session => session.Course.Contains(course, StringComparison.OrdinalIgnoreCase));
+    }
+
+    if (minSeatsAvailable is not null)
+    {
+        sessions = sessions.Where(session => session.SeatsAvailable >= minSeatsAvailable);
+    }
+
+    return sessions;
+}
+```
+
+Wire it into both endpoints, but *differently on purpose*:
+
+```csharp
+[HttpGet]
+public IEnumerable<StudySession> GetAll(
+    [FromQuery] string? course = null,
+    [FromQuery] int? minSeatsAvailable = null,
+    [FromQuery] DateTimeOffset? asOf = null)
+{
+    var upcoming = Sessions
+        .UpcomingOnly(asOf: asOf)
+        .Filter(course, minSeatsAvailable)
+        .ToList();
+    upcoming.Sort();
+    return upcoming;
+}
+
+[HttpGet("summary")]
+public IEnumerable<StudySessionSummary> GetSummaries([FromQuery] int? minSeatsAvailable = null) =>
+    Sessions.UpcomingOnly().Filter(minSeatsAvailable: minSeatsAvailable)
+        .Select(s => new StudySessionSummary(s.Course, s.Topic, s.StartsAt, s.SeatsAvailable));
+```
+
+The contrast is the point:
+
+- `GetAll` calls `.UpcomingOnly(asOf: asOf)` with a **real, non-default value** now - pass `?asOf=2026-10-15T00:00:00Z` to preview what's upcoming at a future moment instead of right now. It also calls `Filter(course, minSeatsAvailable)` **positionally** - both values are supplied in `Filter`'s own declared order, so naming them would be a readability choice, not a requirement.
+- `GetSummaries` deliberately never exposes a course filter, only `minSeatsAvailable`. `Filter(minSeatsAvailable: minSeatsAvailable)` **skips `course` entirely** - `Filter`'s first parameter. There is no positional way to write that call: you'd have to either name `minSeatsAvailable`, or pass `null` explicitly for `course` first. This is the real "named arguments aren't just visibility" moment - it's the only way to reach a later optional parameter without also committing to (and hardcoding) the one you're skipping.
+
+Add a few `.http` examples: `GET .../api/studysessions?course=software`, `?minSeatsAvailable=4`, `?asOf=2026-10-15T00:00:00Z`, and `GET .../api/studysessions/summary?minSeatsAvailable=4`.
+
 ## 9. Try It
 
 Restart the app (the model changes need a rebuild):
@@ -426,4 +426,4 @@ Restart the app (the model changes need a rebuild):
 
 ## Next Steps
 
-Once this is done, update `ROADMAP.md`: check off the rest of your Alpha requirement checklist (steps 1-5), check off "Filter sessions by course" under Beta's Features (step 7 - a real feature landed early, not just a requirement-coverage checkbox), and note the ratings building block under Final's ratings feature without checking it off (step 8 is a preview - who's allowed to rate, preventing duplicate ratings, and rolling ratings up across a host's sessions are still missing). Update `README.md`'s "Current Examples" section to match. See [WALKTHROUGHS.md](WALKTHROUGHS.md) for later lectures' walkthroughs as they're added.
+Once this is done, update `ROADMAP.md`: check off the rest of your Alpha requirement checklist (steps 1-5), note the ratings building block under Final's ratings feature without checking it off (step 7 is a preview - who's allowed to rate, preventing duplicate ratings, and rolling ratings up across a host's sessions are still missing), and check off "Filter sessions by course" under Beta's Features (step 8 - a real feature landed early, not just a requirement-coverage checkbox). Update `README.md`'s "Current Examples" section to match. See [WALKTHROUGHS.md](WALKTHROUGHS.md) for later lectures' walkthroughs as they're added.
