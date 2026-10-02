@@ -250,4 +250,4 @@ These aren't code your app runs - they're process, same as your branch naming ru
 
 ## Next Steps
 
-Once this is done, update `ROADMAP.md` to check off "Basic input validation on the `StudySession` model" and `README.md`'s "Current Examples" section to match. See [WALKTHROUGHS.md](WALKTHROUGHS.md) for later lectures' walkthroughs as they're added.
+Once this is done, update `ROADMAP.md` to check off "Basic input validation on the `StudySession` model" and `README.md`'s "Current Examples" section to match. Continue with [WALKTHROUGH-04.md](WALKTHROUGH-04.md) - C# language features (record, enum, extension method, LINQ, IComparable) and a real timezone bug fix. See [WALKTHROUGHS.md](WALKTHROUGHS.md) for later lectures' walkthroughs as they're added.

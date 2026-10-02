@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using CoolApp.Extensions;
 using CoolApp.Models;
 
 namespace CoolApp.Controllers;
@@ -16,7 +17,7 @@ public class StudySessionsController : ControllerBase
             Course = "Software Development I",
             Topic = "Pull request etiquette",
             Location = "MIF, room 401",
-            StartsAt = DateTime.Now.AddDays(1),
+            StartsAt = DateTimeOffset.UtcNow.AddDays(1),
             HostName = "Ieva",
             SeatsAvailable = 3
         },
@@ -26,14 +27,46 @@ public class StudySessionsController : ControllerBase
             Course = "Software Development I",
             Topic = ".NET memory model (stack vs heap)",
             Location = "Library, 2nd floor",
-            StartsAt = DateTime.Now.AddDays(2),
+            StartsAt = DateTimeOffset.UtcNow.AddDays(2),
             HostName = "Tomas",
             SeatsAvailable = 5
         }
     };
 
     [HttpGet]
-    public IEnumerable<StudySession> GetAll() => Sessions;
+    public IEnumerable<StudySession> GetAll(
+        [FromQuery] string? course = null,
+        [FromQuery] int? minSeatsAvailable = null,
+        [FromQuery] DateTimeOffset? asOf = null)
+    {
+        // asOf: a real (not just documented) use of UpcomingOnly's optional argument -
+        // omit it for "upcoming as of right now" (every other call site does this), or
+        // pass ?asOf=... to preview what the list will look like at a future moment.
+        //
+        // course/minSeatsAvailable are supplied in Filter's own declared order here, so
+        // naming them is a readability choice, not a requirement - contrast GetSummaries
+        // below, which skips the first one entirely and *must* name the second.
+        //
+        // LINQ (Where, inside UpcomingOnly/Filter) filters; IComparable<StudySession>
+        // (via CompareTo) lets List<T>.Sort() put what's left in start-time order with
+        // no comparer.
+        var upcoming = Sessions
+            .UpcomingOnly(asOf: asOf)
+            .Filter(course, minSeatsAvailable)
+            .ToList();
+        upcoming.Sort();
+        return upcoming;
+    }
+
+    [HttpGet("summary")]
+    public IEnumerable<StudySessionSummary> GetSummaries([FromQuery] int? minSeatsAvailable = null) =>
+        // This endpoint deliberately never exposes a course filter - only minSeatsAvailable.
+        // Filter(minSeatsAvailable: minSeatsAvailable) skips `course` (Filter's first
+        // parameter) entirely: there is no positional way to write that call. Naming
+        // isn't optional polish here, it's the only way to reach the parameter you want
+        // without also having to know and restate the one you don't.
+        Sessions.UpcomingOnly().Filter(minSeatsAvailable: minSeatsAvailable)
+            .Select(s => new StudySessionSummary(s.Course, s.Topic, s.StartsAt, s.SeatsAvailable, s.HostRating));
 
     [HttpGet("{id:int}")]
     public ActionResult<StudySession> GetById(int id)
@@ -79,6 +112,22 @@ public class StudySessionsController : ControllerBase
         }
 
         Sessions.Remove(existing);
+        return NoContent();
+    }
+
+    [HttpPut("{id:int}/rating")]
+    public IActionResult RateSession(int id, RatingSubmission submission)
+    {
+        var existing = Sessions.FirstOrDefault(s => s.Id == id);
+        if (existing is null)
+        {
+            return NotFound();
+        }
+
+        // [Range] on RatingSubmission.Value already rejected anything outside 1-5
+        // before this line runs - the Rating constructor re-checks anyway, since a
+        // Rating that's out of range has to be impossible everywhere, not just here.
+        existing.HostRating = new Rating(submission.Value);
         return NoContent();
     }
 }

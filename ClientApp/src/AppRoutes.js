@@ -1,5 +1,6 @@
 import { Home } from "./components/Home";
 import { StudySessions } from "./components/StudySessions";
+import { SessionSummaries } from "./components/SessionSummaries";
 
 const AppRoutes = [
   {
@@ -9,6 +10,10 @@ const AppRoutes = [
   {
     path: '/study-sessions',
     element: <StudySessions />
+  },
+  {
+    path: '/session-summaries',
+    element: <SessionSummaries />
   }
 ];
 
