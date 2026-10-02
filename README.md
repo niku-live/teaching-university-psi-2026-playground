@@ -116,5 +116,15 @@ npm run build
 - Development and production SPA build integration
 - A pull request template and definition of done, so "done" means the same thing for everyone on the team
 - `CONTRIBUTING.md` and `.github/CODEOWNERS`, so the process (branching, formatting, review routing) is written down once instead of tribal knowledge
+- A `SessionStatus` enum (`Scheduled`/`Full`), computed from `SeatsAvailable` instead of scattering `if` checks on a raw number
+- `StudySessionSummary`, an immutable `record` returned by `GET /api/studysessions/summary` alongside the full `StudySession` `class`
+- `StudySessionExtensions.UpcomingOnly()`, an extension method using LINQ to filter out past sessions, with an optional `asOf` parameter for testability
+- `StudySession` implements `IComparable<StudySession>`, so `List<StudySession>.Sort()` orders sessions by start time with no comparer needed
+- `StartsAt` is a `DateTimeOffset`, not a bare `DateTime` - the API and the browser form both deal in explicit, unambiguous instants instead of a timestamp whose timezone has to be guessed
+- A `/session-summaries` page rendering `GET /api/studysessions/summary`'s results, so the endpoint has a real consumer beyond `CoolApp.http`
+- A `Rating` value type (a plain `struct`, not a `record struct` - no built-in `==`) enforcing 1-5 at construction, plus a per-session `HostRating` set via `PUT /api/studysessions/{id}/rating` and shown read-only on `/session-summaries` - an early building block for Final's ratings feature
+- Giving a rating from the UI: a "Rate..." dropdown on `/study-sessions`, next to each session's current rating (or "Not rated")
+- `GET /api/studysessions` filters by course and minimum seats available (Beta's "Filter sessions by course" feature), and can preview a future moment via `?asOf=...` - a real, non-default use of `UpcomingOnly`'s optional argument
+- `StudySessionExtensions.Filter()`, where `GET /api/studysessions/summary` calling `Filter(minSeatsAvailable: ...)` shows named arguments being *necessary*, not just readable: skipping `course` (Filter's first parameter) to reach the second has no positional syntax at all
 
 The repository will change throughout the semester. Use Git history to compare lecture stages and understand why each change was introduced.

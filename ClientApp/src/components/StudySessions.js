@@ -10,15 +10,25 @@ const emptyForm = {
   seatsAvailable: 1
 };
 
+const emptyFilters = {
+  course: '',
+  minSeatsAvailable: '',
+  asOf: ''
+};
+
 export class StudySessions extends Component {
   static displayName = StudySessions.name;
 
   constructor(props) {
     super(props);
-    this.state = { sessions: [], loading: true, form: { ...emptyForm }, submitting: false, error: null, fieldErrors: {} };
+    this.state = { sessions: [], loading: true, form: { ...emptyForm }, filters: { ...emptyFilters }, submitting: false, error: null, fieldErrors: {} };
 
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
+    this.rateSession = this.rateSession.bind(this);
+    this.handleFilterChange = this.handleFilterChange.bind(this);
+    this.handleFilterSubmit = this.handleFilterSubmit.bind(this);
+    this.handleFilterClear = this.handleFilterClear.bind(this);
   }
 
   componentDidMount() {
@@ -41,8 +51,8 @@ export class StudySessions extends Component {
       errors.startsAt = 'Starts at must be in the future.';
     }
 
-    if (!form.seatsAvailable || form.seatsAvailable < 1) {
-      errors.seatsAvailable = 'Seats available must be at least 1.';
+    if (form.seatsAvailable === '' || form.seatsAvailable < 0) {
+      errors.seatsAvailable = 'Seats available cannot be negative.';
     }
 
     return errors;
@@ -61,7 +71,31 @@ export class StudySessions extends Component {
     return errors;
   }
 
-  static renderSessionsTable(sessions) {
+  // Mirrors GetAll's own three query parameters exactly - course, minSeatsAvailable,
+  // and asOf are all optional, so an empty filter just means "omit it" here too.
+  static buildSessionsQuery(filters) {
+    const params = new URLSearchParams();
+
+    if (filters.course.trim()) {
+      params.set('course', filters.course.trim());
+    }
+
+    if (filters.minSeatsAvailable !== '') {
+      params.set('minSeatsAvailable', filters.minSeatsAvailable);
+    }
+
+    if (filters.asOf) {
+      // Same reasoning as the create-session form: a bare datetime-local value has no
+      // timezone, so convert it to an explicit UTC instant before it becomes a query
+      // param, rather than leaving the server to guess.
+      params.set('asOf', new Date(filters.asOf).toISOString());
+    }
+
+    const query = params.toString();
+    return query ? `?${query}` : '';
+  }
+
+  static renderSessionsTable(sessions, onRate) {
     return (
       <table className="table table-striped" aria-labelledby="tableLabel">
         <thead>
@@ -72,6 +106,8 @@ export class StudySessions extends Component {
             <th>Starts at</th>
             <th>Host</th>
             <th>Seats left</th>
+            <th>Status</th>
+            <th>Rating</th>
           </tr>
         </thead>
         <tbody>
@@ -83,6 +119,23 @@ export class StudySessions extends Component {
               <td>{new Date(session.startsAt).toLocaleString()}</td>
               <td>{session.hostName}</td>
               <td>{session.seatsAvailable}</td>
+              <td>{session.status}</td>
+              <td>
+                {session.hostRating ? `${session.hostRating.value}/5` : 'Not rated'}
+                {' '}
+                <select
+                  aria-label={`Rate "${session.topic}"`}
+                  defaultValue=""
+                  onChange={event => onRate(session.id, event.target.value)}
+                >
+                  <option value="" disabled>Rate...</option>
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4</option>
+                  <option value="5">5</option>
+                </select>
+              </td>
             </tr>
           )}
         </tbody>
@@ -112,12 +165,57 @@ export class StudySessions extends Component {
   render() {
     let contents = this.state.loading
       ? <p><em>Loading...</em></p>
-      : StudySessions.renderSessionsTable(this.state.sessions);
+      : StudySessions.renderSessionsTable(this.state.sessions, this.rateSession);
 
     return (
       <div>
         <h1 id="tableLabel">Study Sessions</h1>
         <p>Find a study session hosted by another student, or open a pull request to add your own.</p>
+
+        <form className="study-session-filters mb-3" onSubmit={this.handleFilterSubmit}>
+          <div className="row g-2 align-items-end">
+            <div className="col-auto">
+              <label className="form-label" htmlFor="filter-course">Course contains</label>
+              <input
+                className="form-control"
+                id="filter-course"
+                name="course"
+                value={this.state.filters.course}
+                onChange={this.handleFilterChange}
+              />
+            </div>
+            <div className="col-auto">
+              <label className="form-label" htmlFor="filter-minSeatsAvailable">Min seats available</label>
+              <input
+                className="form-control"
+                id="filter-minSeatsAvailable"
+                name="minSeatsAvailable"
+                type="number"
+                min="0"
+                value={this.state.filters.minSeatsAvailable}
+                onChange={this.handleFilterChange}
+              />
+            </div>
+            <div className="col-auto">
+              <label className="form-label" htmlFor="filter-asOf">Upcoming as of</label>
+              <input
+                className="form-control"
+                id="filter-asOf"
+                name="asOf"
+                type="datetime-local"
+                value={this.state.filters.asOf}
+                onChange={this.handleFilterChange}
+              />
+            </div>
+            <div className="col-auto">
+              <button className="btn btn-secondary" type="submit">Apply filters</button>
+            </div>
+            <div className="col-auto">
+              <button className="btn btn-link" type="button" onClick={this.handleFilterClear}>Clear</button>
+            </div>
+          </div>
+        </form>
+
         <div className="study-sessions-table">
           {contents}
         </div>
@@ -130,7 +228,7 @@ export class StudySessions extends Component {
           {this.renderField('location', 'Location')}
           {this.renderField('startsAt', 'Starts at', { type: 'datetime-local' })}
           {this.renderField('hostName', 'Host name')}
-          {this.renderField('seatsAvailable', 'Seats available', { type: 'number', extraProps: { min: '1' } })}
+          {this.renderField('seatsAvailable', 'Seats available', { type: 'number', extraProps: { min: '0' } })}
           <button className="btn btn-primary" type="submit" disabled={this.state.submitting}>
             {this.state.submitting ? 'Creating...' : 'Create session'}
           </button>
@@ -157,10 +255,17 @@ export class StudySessions extends Component {
 
     this.setState({ submitting: true, error: null, fieldErrors: {} });
 
+    // The <input type="datetime-local"> value has no timezone info - it's just
+    // "2026-10-24T18:00" in whatever timezone the browser happens to be in. Converting
+    // it to a Date and back out via toISOString() turns it into an explicit UTC instant
+    // (e.g. "2026-10-24T16:00:00.000Z") before it goes anywhere near the network, so the
+    // API is never left guessing which timezone a bare timestamp was supposed to mean.
+    const payload = { ...this.state.form, startsAt: new Date(this.state.form.startsAt).toISOString() };
+
     const response = await fetch('api/studysessions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(this.state.form)
+      body: JSON.stringify(payload)
     });
 
     if (!response.ok) {
@@ -177,9 +282,53 @@ export class StudySessions extends Component {
     await this.populateStudySessions();
   }
 
-  async populateStudySessions() {
-    const response = await fetch('api/studysessions');
+  // Accepts filters explicitly rather than always reading this.state.filters, so
+  // handleFilterClear can fetch with the just-cleared values without racing
+  // setState's own async update.
+  async populateStudySessions(filters = this.state.filters) {
+    const query = StudySessions.buildSessionsQuery(filters);
+    const response = await fetch(`api/studysessions${query}`);
     const data = await response.json();
     this.setState({ sessions: data, loading: false });
+  }
+
+  handleFilterChange(event) {
+    const { name, value } = event.target;
+    this.setState(prevState => ({
+      filters: { ...prevState.filters, [name]: value }
+    }));
+  }
+
+  async handleFilterSubmit(event) {
+    event.preventDefault();
+    this.setState({ loading: true });
+    await this.populateStudySessions();
+  }
+
+  async handleFilterClear() {
+    const filters = { ...emptyFilters };
+    this.setState({ filters, loading: true });
+    await this.populateStudySessions(filters);
+  }
+
+  // The select is uncontrolled (defaultValue, not value) - React reuses each row's
+  // DOM node across re-renders since key={session.id} stays stable, so it keeps
+  // showing whatever the person just picked rather than resetting to "Rate...".
+  // The number to its left, refreshed by populateStudySessions() below, is what's
+  // actually persisted server-side - the select itself is just the input control.
+  async rateSession(id, value) {
+    if (!value) {
+      return;
+    }
+
+    const response = await fetch(`api/studysessions/${id}/rating`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ value: Number(value) })
+    });
+
+    if (response.ok) {
+      await this.populateStudySessions();
+    }
   }
 }
