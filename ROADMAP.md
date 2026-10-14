@@ -32,7 +32,7 @@ Requirement coverage still needed:
 - [ ] A generic type/method (e.g. a generic `Repository<T>` used for `StudySession` and one other entity)
 - [ ] A custom exception type, thrown and handled meaningfully (e.g. `SessionFullException` when RSVP-ing to a full session)
 - [ ] `async`/`await` for all I/O (database calls, no synchronous DB access)
-- [ ] Dependency Injection used for the repository/service layer instead of `new`-ing dependencies
+- [x] Dependency Injection used for the repository/service layer instead of `new`-ing dependencies (landed early in Lecture 06: `StudySessionService` + `IStudySessionRepository`, backed by an in-memory implementation until Entity Framework arrives)
 - [ ] Unit and integration test coverage of at least 50%
 
 ## Final - matches Lab Assignment #3 (lectures 11-14)
