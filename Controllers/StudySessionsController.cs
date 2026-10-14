@@ -4,11 +4,11 @@ using CoolApp.Services;
 
 namespace CoolApp.Controllers;
 
-// Only translates HTTP to and from StudySessionService calls: routing, model binding,
+// Only translates HTTP to and from IStudySessionService calls: routing, model binding,
 // status codes. Everything about what the app actually *does* lives in the service.
 [ApiController]
 [Route("api/[controller]")]
-public class StudySessionsController(StudySessionService service) : ControllerBase
+public class StudySessionsController(IStudySessionService service) : ControllerBase
 {
     [HttpGet]
     public IEnumerable<StudySession> GetAll(

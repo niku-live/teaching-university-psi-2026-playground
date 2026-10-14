@@ -126,7 +126,39 @@ public class InMemoryStudySessionRepository : IStudySessionRepository
 
 ## 3. Add the Service (Single Responsibility)
 
-Add `Services/StudySessionService.cs`. The rules move here from the controller: what "upcoming" means, filtering, sorting, applying a rating. It receives the repository through its constructor instead of creating it (a primary constructor, C# 12):
+First add `Services/IStudySessionService.cs` - what the controller needs from the app's rules, without knowing which class provides them:
+
+```csharp
+using CoolApp.Models;
+
+namespace CoolApp.Services;
+
+// What the controller needs from the app's rules, without knowing which class provides
+// them (Dependency Inversion again, one layer up): the controller depends on this
+// interface, so a test can hand it a fake service and check what the controller does
+// with the results - status codes, 404s - without any real data or rules involved.
+//
+// "Not found" is reported as null/false rather than an exception, so the controller can
+// turn it into a 404 without a try/catch.
+public interface IStudySessionService
+{
+    IEnumerable<StudySession> GetUpcoming(string? course, int? minSeatsAvailable, DateTimeOffset? asOf);
+
+    IEnumerable<StudySessionSummary> GetSummaries(int? minSeatsAvailable);
+
+    StudySession? GetById(int id);
+
+    StudySession Create(StudySession session);
+
+    bool Update(int id, StudySession session);
+
+    bool Delete(int id);
+
+    bool Rate(int id, int value);
+}
+```
+
+Then add `Services/StudySessionService.cs`, which implements it. The rules move here from the controller: what "upcoming" means, filtering, sorting, applying a rating. It receives the repository through its constructor instead of creating it (a primary constructor, C# 12):
 
 ```csharp
 using CoolApp.Extensions;
@@ -142,7 +174,7 @@ namespace CoolApp.Services;
 //
 // The repository arrives through the constructor (Dependency Injection) instead of
 // being created here, so this class doesn't know or care where sessions are stored.
-public class StudySessionService(IStudySessionRepository repository)
+public class StudySessionService(IStudySessionRepository repository) : IStudySessionService
 {
     public IEnumerable<StudySession> GetUpcoming(string? course, int? minSeatsAvailable, DateTimeOffset? asOf)
     {
@@ -232,11 +264,11 @@ using CoolApp.Services;
 
 namespace CoolApp.Controllers;
 
-// Only translates HTTP to and from StudySessionService calls: routing, model binding,
+// Only translates HTTP to and from IStudySessionService calls: routing, model binding,
 // status codes. Everything about what the app actually *does* lives in the service.
 [ApiController]
 [Route("api/[controller]")]
-public class StudySessionsController(StudySessionService service) : ControllerBase
+public class StudySessionsController(IStudySessionService service) : ControllerBase
 {
     [HttpGet]
     public IEnumerable<StudySession> GetAll(
@@ -288,10 +320,10 @@ using CoolApp.Services;
 // ...
 
 builder.Services.AddSingleton<IStudySessionRepository, InMemoryStudySessionRepository>();
-builder.Services.AddScoped<StudySessionService>();
+builder.Services.AddScoped<IStudySessionService, StudySessionService>();
 ```
 
-ASP.NET Core now builds the whole chain for you: a request for `StudySessionsController` needs a `StudySessionService`, which needs an `IStudySessionRepository`. Neither class ever writes `new` for its dependency.
+ASP.NET Core now builds the whole chain for you: a request for `StudySessionsController` needs an `IStudySessionService`, which needs an `IStudySessionRepository`. Neither class ever writes `new` for its dependency.
 
 The lifetimes are deliberate: the repository is a **singleton** because the in-memory data lives inside the instance (a fresh instance per request would forget everything). The service is **scoped** (one per request). A service may only depend on services with the same or a longer lifetime - scoped depending on singleton is fine; the reverse is the "captive dependency" trap from this week's DI theory. When you move to Entity Framework in Beta, the repository will become scoped (because `DbContext` is), and the service stays as it is.
 

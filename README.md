@@ -92,7 +92,7 @@ npm run build
 | `Program.cs` | Configures the ASP.NET Core application and HTTP pipeline |
 | `Models/` | Backend domain models |
 | `Controllers/` | Backend API controllers - HTTP in, HTTP out, no business rules |
-| `Services/` | `StudySessionService`: the app's rules (filtering, ordering, ratings) |
+| `Services/` | `IStudySessionService` and `StudySessionService`: the app's rules (filtering, ordering, ratings) |
 | `Repositories/` | `IStudySessionRepository` and its in-memory implementation: where sessions are stored |
 | `Pages/` | Server-rendered error page support |
 | `ClientApp/src/` | React application source |
@@ -128,6 +128,6 @@ npm run build
 - Giving a rating from the UI: a "Rate..." dropdown on `/study-sessions`, next to each session's current rating (or "Not rated")
 - `GET /api/studysessions` filters by course and minimum seats available (Beta's "Filter sessions by course" feature), and can preview a future moment via `?asOf=...` - a real, non-default use of `UpcomingOnly`'s optional argument
 - `StudySessionExtensions.Filter()`, where `GET /api/studysessions/summary` calling `Filter(minSeatsAvailable: ...)` shows named arguments being *necessary*, not just readable: skipping `course` (Filter's first parameter) to reach the second has no positional syntax at all
-- Controller / service / repository split: `StudySessionsController` only translates HTTP, `StudySessionService` holds the rules, and `IStudySessionRepository` hides where sessions are stored - all wired together with Dependency Injection in `Program.cs` (SOLID: single responsibility, dependency inversion)
+- Controller / service / repository split: `StudySessionsController` only translates HTTP (depending on `IStudySessionService`), `StudySessionService` holds the rules, and `IStudySessionRepository` hides where sessions are stored - all wired together with Dependency Injection in `Program.cs` (SOLID: single responsibility, dependency inversion)
 
 The repository will change throughout the semester. Use Git history to compare lecture stages and understand why each change was introduced.

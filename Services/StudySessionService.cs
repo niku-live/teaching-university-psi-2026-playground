@@ -11,7 +11,7 @@ namespace CoolApp.Services;
 //
 // The repository arrives through the constructor (Dependency Injection) instead of
 // being created here, so this class doesn't know or care where sessions are stored.
-public class StudySessionService(IStudySessionRepository repository)
+public class StudySessionService(IStudySessionRepository repository) : IStudySessionService
 {
     public IEnumerable<StudySession> GetUpcoming(string? course, int? minSeatsAvailable, DateTimeOffset? asOf)
     {
