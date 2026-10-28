@@ -549,4 +549,4 @@ Register it instead of the in-memory one in `Program.cs`, run the app, and `PUT`
 
 ## Next Steps
 
-Once this is done, update `ROADMAP.md` (the Beta item "Dependency Injection used for the repository/service layer" can be checked off) and `README.md`'s "Project Map" and "Current Examples". See [WALKTHROUGHS.md](WALKTHROUGHS.md) for later lectures' walkthroughs as they're added.
+Once this is done, update `ROADMAP.md` (the Beta item "Dependency Injection used for the repository/service layer" can be checked off) and `README.md`'s "Project Map" and "Current Examples". Next: [WALKTHROUGH-08.md](WALKTHROUGH-08.md) splits the repository into an API folder and a React folder, adds automated tests next to them, and then makes these layers async. See [WALKTHROUGHS.md](WALKTHROUGHS.md) for the full list.
