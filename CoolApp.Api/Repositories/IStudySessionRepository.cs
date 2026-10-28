@@ -3,9 +3,10 @@ using CoolApp.Models;
 namespace CoolApp.Repositories;
 
 // The abstraction the rest of the app depends on (Dependency Inversion): callers say
-// *what* they need stored and retrieved, never *where* it lives. Today the only
-// implementation keeps sessions in memory; Beta swaps in Entity Framework without
-// touching anything that uses this interface.
+// *what* they need stored and retrieved, never *where* it lives. The app uses
+// EfStudySessionRepository (SQLite through Entity Framework); the unit tests use
+// InMemoryStudySessionRepository. Swapping one for the other touched nothing that uses
+// this interface.
 //
 // The contract is part of the interface, not just the signatures - every implementation
 // has to honor it, or callers can't safely substitute one for another (Liskov):

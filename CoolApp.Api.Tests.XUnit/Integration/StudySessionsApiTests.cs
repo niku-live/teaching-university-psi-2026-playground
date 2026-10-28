@@ -1,18 +1,17 @@
 using System.Net;
 using System.Net.Http.Json;
 using CoolApp.Models;
-using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace CoolApp.Api.Tests.XUnit.Integration;
 
-// Starts the real application (Program.cs) in memory with WebApplicationFactory and talks
-// to it over HTTP. These test what the unit tests cannot: routing, model validation, JSON
-// serialization and the Dependency Injection registrations.
+// Starts the real application (Program.cs) in memory and talks to it over HTTP. These
+// test what the unit tests cannot: routing, model validation, JSON serialization, the
+// Dependency Injection registrations - and now a real database (see StudySpotApiFactory).
 //
-// IClassFixture: one application is started for all tests in this class, because starting
-// it for every test would be slow. The tests share its in-memory data, so each test
-// creates the sessions it needs instead of relying on what another test left behind.
-public class StudySessionsApiTests(WebApplicationFactory<Program> factory) : IClassFixture<WebApplicationFactory<Program>>
+// One application (and one database) is shared by all tests, because starting it for
+// every test would be slow. So each test creates the sessions it needs instead of
+// relying on what another test left behind.
+public class StudySessionsApiTests(StudySpotApiFactory factory)
 {
     private readonly HttpClient _client = factory.CreateClient();
 
