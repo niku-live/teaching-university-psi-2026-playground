@@ -14,6 +14,9 @@ namespace CoolApp.Repositories;
 //   - GetById may hand back the stored instance *or a copy*. Callers must not rely on
 //     mutating what they got back - the only way to persist a change is Update.
 //   - Update and Delete return false (and change nothing) when the id doesn't exist.
+//   - Update throws StudySessionConflictException (and changes nothing) when the session
+//     was changed since the caller read it - session.Version is the version they read.
+//     An implementation that can't tell (InMemoryStudySessionRepository) never throws it.
 //   - A cancelled token stops the work: the method throws OperationCanceledException
 //     instead of reading or changing anything.
 //

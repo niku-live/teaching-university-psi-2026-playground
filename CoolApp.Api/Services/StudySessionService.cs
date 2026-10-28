@@ -71,6 +71,11 @@ public class StudySessionService(IStudySessionRepository repository) : IStudySes
         existing.HostName = session.HostName;
         existing.SeatsAvailable = session.SeatsAvailable;
 
+        // The version the client read, not the one just loaded: if someone saved the
+        // session in between, the repository throws StudySessionConflictException
+        // instead of silently overwriting their change.
+        existing.Version = session.Version;
+
         // Without this line the in-memory repository would still appear to work, because
         // GetById happens to return the stored instance. A repository that returns copies
         // (like a database would) would silently lose the change - see the contract on

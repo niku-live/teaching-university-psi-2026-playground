@@ -1,4 +1,5 @@
 using CoolApp.Data;
+using CoolApp.Exceptions;
 using CoolApp.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -41,9 +42,24 @@ public class EfStudySessionRepository(StudySpotDbContext db) : IStudySessionRepo
             return false;
         }
 
-        // Update attaches the (untracked) session and marks every column as changed.
+        // Update attaches the (untracked) session and marks every column as changed. EF
+        // remembers the Version it was attached with - the one the client read - as the
+        // "original" value, and the new value is one higher:
+        //   UPDATE ... SET "Version" = @new ... WHERE "Id" = @id AND "Version" = @read
+        // so the row only changes if nobody saved it in between.
         db.StudySessions.Update(session);
-        await db.SaveChangesAsync(cancellationToken);
+        session.Version++;
+        try
+        {
+            await db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            // Translate the EF exception into our own one, so nothing above the
+            // repository has to know that Entity Framework exists.
+            throw new StudySessionConflictException(session.Id, ex);
+        }
+
         return true;
     }
 

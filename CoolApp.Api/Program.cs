@@ -1,4 +1,5 @@
 using CoolApp.Data;
+using CoolApp.ExceptionHandling;
 using CoolApp.Repositories;
 using CoolApp.Services;
 using Microsoft.EntityFrameworkCore;
@@ -33,6 +34,12 @@ builder.Services.AddDbContext<StudySpotDbContext>((services, options) =>
 builder.Services.AddScoped<IStudySessionRepository, EfStudySessionRepository>();
 builder.Services.AddScoped<IStudySessionService, StudySessionService>();
 
+// Errors as RFC 9457 "problem details" JSON. Exceptions that reach UseExceptionHandler
+// (below) go through the registered IExceptionHandlers in order; one that no handler
+// takes becomes a plain 500 problem.
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<StudySessionConflictExceptionHandler>();
+
 var app = builder.Build();
 
 // Create or upgrade the database to the latest migration (UseSeeding then adds the sample
@@ -46,6 +53,8 @@ if (app.Environment.IsDevelopment())
 }
 
 // Configure the HTTP request pipeline.
+app.UseExceptionHandler();
+
 if (!app.Environment.IsDevelopment())
 {
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
