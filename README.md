@@ -66,12 +66,12 @@ See [WALKTHROUGH-01.md](WALKTHROUGH-01.md) for a guided setup. In short, you'll 
 
 ## Build and Run
 
-From the repository root:
+From the repository root (the solution, `CoolApp.sln`, is here; the API is in `CoolApp.Api/` and the React app in `CoolApp.Client/`):
 
 ```pwsh
 dotnet restore
 dotnet build
-dotnet run
+dotnet run --project CoolApp.Api
 ```
 
 On the first Debug build, MSBuild installs the frontend dependencies. Running the backend starts the React development server through the ASP.NET Core SPA proxy. Open the HTTPS address printed by `dotnet run` (the default project profile uses `https://localhost:7039`).
@@ -79,7 +79,7 @@ On the first Debug build, MSBuild installs the frontend dependencies. Running th
 Useful frontend commands can also be run directly:
 
 ```pwsh
-cd ClientApp
+cd CoolApp.Client
 npm ci
 npm test
 npm run build
@@ -89,17 +89,20 @@ npm run build
 
 | Path | Purpose |
 | --- | --- |
-| `Program.cs` | Configures the ASP.NET Core application and HTTP pipeline |
-| `Models/` | Backend domain models |
-| `Controllers/` | Backend API controllers - HTTP in, HTTP out, no business rules |
-| `Services/` | `IStudySessionService` and `StudySessionService`: the app's rules (filtering, ordering, ratings) |
-| `Repositories/` | `IStudySessionRepository` and its in-memory implementation: where sessions are stored |
-| `Pages/` | Server-rendered error page support |
-| `ClientApp/src/` | React application source |
-| `ClientApp/src/components/` | Example UI components |
-| `appsettings*.json` | Backend configuration |
-| `Properties/launchSettings.json` | Local development profiles and URLs |
-| `CoolApp.http` | REST Client requests for testing the API (see [File Formats & Tools](https://github.com/niku-live/teaching-university-psi-2026#http-request-files-http) in the course repo) |
+| `CoolApp.sln` | The solution: every project in the repository |
+| `CoolApp.Api/` | The ASP.NET Core project (`CoolApp.Api.csproj`): the API, plus the SPA proxy that starts the React app in development and bundles it on publish |
+| `CoolApp.Api/Program.cs` | Configures the ASP.NET Core application and HTTP pipeline |
+| `CoolApp.Api/Models/` | Backend domain models |
+| `CoolApp.Api/Controllers/` | Backend API controllers - HTTP in, HTTP out, no business rules |
+| `CoolApp.Api/Services/` | `IStudySessionService` and `StudySessionService`: the app's rules (filtering, ordering, ratings) |
+| `CoolApp.Api/Repositories/` | `IStudySessionRepository` and its in-memory implementation: where sessions are stored |
+| `CoolApp.Api/Pages/` | Server-rendered error page support |
+| `CoolApp.Client/` | The React app (its own `package.json`), next to the API rather than inside it |
+| `CoolApp.Client/src/` | React application source |
+| `CoolApp.Client/src/components/` | Example UI components |
+| `CoolApp.Api/appsettings*.json` | Backend configuration |
+| `CoolApp.Api/Properties/launchSettings.json` | Local development profiles and URLs |
+| `CoolApp.Api/CoolApp.http` | REST Client requests for testing the API (see [File Formats & Tools](https://github.com/niku-live/teaching-university-psi-2026#http-request-files-http) in the course repo) |
 | `docs/definition-of-done.md` | Shared checklist for when a change counts as finished |
 | `.github/pull_request_template.md` | Checklist every pull request starts from |
 | `CONTRIBUTING.md` | Branch naming, formatting, and the pull request process |
