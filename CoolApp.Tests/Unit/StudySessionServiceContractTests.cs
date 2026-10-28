@@ -4,8 +4,8 @@ using CoolApp.Services;
 namespace CoolApp.Tests.Unit;
 
 // The same service, run against a repository that returns copies. These tests only pass
-// because the service saves every change through repository.Update - delete that line
-// in StudySessionService.Rate and watch this test fail, while the tests in
+// because the service saves every change through repository.UpdateAsync - delete that
+// line in StudySessionService.RateAsync and watch this test fail, while the tests in
 // StudySessionServiceTests (using the in-memory repository, which hands out the stored
 // instance) still pass.
 public class StudySessionServiceContractTests
@@ -13,9 +13,9 @@ public class StudySessionServiceContractTests
     private readonly StudySessionService _service = new(new CopyingStudySessionRepository());
 
     [Fact]
-    public void Rate_RepositoryReturnsCopies_RatingIsStillSaved()
+    public async Task Rate_RepositoryReturnsCopies_RatingIsStillSaved()
     {
-        var session = _service.Create(new StudySession
+        var session = await _service.CreateAsync(new StudySession
         {
             Course = "Software Development I",
             Topic = "Testing",
@@ -23,10 +23,11 @@ public class StudySessionServiceContractTests
             StartsAt = new DateTimeOffset(2030, 1, 2, 18, 0, 0, TimeSpan.Zero),
             HostName = "Tomas",
             SeatsAvailable = 3
-        });
+        }, TestContext.Current.CancellationToken);
 
-        _service.Rate(session.Id, 5);
+        await _service.RateAsync(session.Id, 5, TestContext.Current.CancellationToken);
 
-        Assert.Equal(new Rating(5), _service.GetById(session.Id)!.HostRating);
+        var stored = await _service.GetByIdAsync(session.Id, TestContext.Current.CancellationToken);
+        Assert.Equal(new Rating(5), stored!.HostRating);
     }
 }
