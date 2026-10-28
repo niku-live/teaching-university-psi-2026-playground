@@ -9,19 +9,22 @@ namespace CoolApp.Services;
 //
 // "Not found" is reported as null/false rather than an exception, so the controller can
 // turn it into a 404 without a try/catch.
+//
+// Async all the way up: the repository is async, so everything that calls it is too, and
+// each method passes the caller's CancellationToken on to the repository.
 public interface IStudySessionService
 {
-    IEnumerable<StudySession> GetUpcoming(string? course, int? minSeatsAvailable, DateTimeOffset? asOf);
+    Task<IEnumerable<StudySession>> GetUpcomingAsync(string? course, int? minSeatsAvailable, DateTimeOffset? asOf, CancellationToken cancellationToken);
 
-    IEnumerable<StudySessionSummary> GetSummaries(int? minSeatsAvailable);
+    Task<IEnumerable<StudySessionSummary>> GetSummariesAsync(int? minSeatsAvailable, CancellationToken cancellationToken);
 
-    StudySession? GetById(int id);
+    Task<StudySession?> GetByIdAsync(int id, CancellationToken cancellationToken);
 
-    StudySession Create(StudySession session);
+    Task<StudySession> CreateAsync(StudySession session, CancellationToken cancellationToken);
 
-    bool Update(int id, StudySession session);
+    Task<bool> UpdateAsync(int id, StudySession session, CancellationToken cancellationToken);
 
-    bool Delete(int id);
+    Task<bool> DeleteAsync(int id, CancellationToken cancellationToken);
 
-    bool Rate(int id, int value);
+    Task<bool> RateAsync(int id, int value, CancellationToken cancellationToken);
 }

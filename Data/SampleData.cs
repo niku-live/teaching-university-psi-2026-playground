@@ -1,4 +1,5 @@
 using CoolApp.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace CoolApp.Data;
 
@@ -9,9 +10,9 @@ namespace CoolApp.Data;
 // "tomorrow" and "the day after" relative to whenever you first run the app.
 public static class SampleData
 {
-    public static void Seed(StudySpotDbContext db)
+    public static async Task SeedAsync(StudySpotDbContext db)
     {
-        if (db.StudySessions.Any())
+        if (await db.StudySessions.AnyAsync())
         {
             return;
         }
@@ -35,6 +36,6 @@ public static class SampleData
                 HostName = "Tomas",
                 SeatsAvailable = 5
             });
-        db.SaveChanges();
+        await db.SaveChangesAsync();
     }
 }

@@ -13,16 +13,21 @@ namespace CoolApp.Repositories;
 //   - GetById may hand back the stored instance *or a copy*. Callers must not rely on
 //     mutating what they got back - the only way to persist a change is Update.
 //   - Update and Delete return false (and change nothing) when the id doesn't exist.
+//
+// Every method is async: storage is I/O (a database, a file, a network call), and a
+// thread shouldn't sit blocked while it waits. The CancellationToken is required, not
+// `= default`, so the compiler makes every caller pass one along - an optional token is
+// easy to forget, and a forgotten token cancels nothing.
 public interface IStudySessionRepository
 {
-    IReadOnlyList<StudySession> GetAll();
+    Task<IReadOnlyList<StudySession>> GetAllAsync(CancellationToken cancellationToken);
 
-    StudySession? GetById(int id);
+    Task<StudySession?> GetByIdAsync(int id, CancellationToken cancellationToken);
 
     // Assigns the new session's Id and returns the stored session.
-    StudySession Add(StudySession session);
+    Task<StudySession> AddAsync(StudySession session, CancellationToken cancellationToken);
 
-    bool Update(StudySession session);
+    Task<bool> UpdateAsync(StudySession session, CancellationToken cancellationToken);
 
-    bool Delete(int id);
+    Task<bool> DeleteAsync(int id, CancellationToken cancellationToken);
 }
