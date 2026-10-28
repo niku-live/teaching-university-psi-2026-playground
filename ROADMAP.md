@@ -27,11 +27,11 @@ Features:
 - [x] Filter sessions by course
 
 Requirement coverage still needed:
-- [ ] Persist sessions in a database with Entity Framework, instead of the in-memory list
+- [x] Persist sessions in a database with Entity Framework, instead of the in-memory list (Lecture 08: SQLite via `StudySpotDbContext` and `EfStudySessionRepository`, behind the same `IStudySessionRepository` - the in-memory implementation stays as a second implementation of the contract)
 - [ ] Request/response DTOs (e.g. `CreateStudySessionDto`/`StudySessionDto`) separating the API contract from the EF entity - introduce alongside EF itself, once there's a real entity (with tracking/navigation properties) worth not leaking over the wire; `StudySessionSummary` (Lecture 04) is a lightweight preview of the same idea
 - [ ] A generic type/method (e.g. a generic `Repository<T>` used for `StudySession` and one other entity)
 - [ ] A custom exception type, thrown and handled meaningfully (e.g. `SessionFullException` when RSVP-ing to a full session)
-- [ ] `async`/`await` for all I/O (database calls, no synchronous DB access)
+- [x] `async`/`await` for all I/O (database calls, no synchronous DB access) (Lecture 08: repository, service and controller are async, and the request's `CancellationToken` is passed down to every EF query)
 - [x] Dependency Injection used for the repository/service layer instead of `new`-ing dependencies (landed early in Lecture 06: `IStudySessionService`/`StudySessionService` + `IStudySessionRepository`, backed by an in-memory implementation until Entity Framework arrives)
 - [ ] Unit and integration test coverage of at least 50%
 
@@ -43,7 +43,7 @@ Features:
 - [ ] Session ratings, so good hosts stand out (early building block landed: a `Rating` value type + a per-session `HostRating`, `PUT /api/studysessions/{id}/rating` - still missing who's allowed to rate, preventing duplicate ratings, and rolling ratings up across a host's sessions)
 
 Requirement coverage still needed:
-- [ ] Entity Framework migrations, run automatically
+- [ ] Entity Framework migrations, run automatically (started early in Lecture 08: an `InitialCreate` migration applied by `Database.MigrateAsync()` at startup - still to come: a second migration for a real schema change)
 - [ ] Unit and integration test coverage of at least 80%
 - [ ] A CI pipeline gating pull requests (tests + at least one extra gate)
 - [ ] Live metrics/monitoring (OpenTelemetry or similar)

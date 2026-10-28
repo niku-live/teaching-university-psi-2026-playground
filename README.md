@@ -93,7 +93,10 @@ npm run build
 | `Models/` | Backend domain models |
 | `Controllers/` | Backend API controllers - HTTP in, HTTP out, no business rules |
 | `Services/` | `IStudySessionService` and `StudySessionService`: the app's rules (filtering, ordering, ratings) |
-| `Repositories/` | `IStudySessionRepository` and its in-memory implementation: where sessions are stored |
+| `Repositories/` | `IStudySessionRepository` and its implementations: `EfStudySessionRepository` (the database, used by the app) and `InMemoryStudySessionRepository` |
+| `Data/` | `StudySpotDbContext` (Entity Framework Core) and the sample data seeded into an empty database |
+| `Migrations/` | Entity Framework migrations, applied automatically at startup (`dotnet ef migrations add <Name>` creates a new one) |
+| `dotnet-tools.json` | Local .NET tools (`dotnet-ef`) - run `dotnet tool restore` once after cloning |
 | `Pages/` | Server-rendered error page support |
 | `ClientApp/src/` | React application source |
 | `ClientApp/src/components/` | Example UI components |
@@ -129,5 +132,7 @@ npm run build
 - `GET /api/studysessions` filters by course and minimum seats available (Beta's "Filter sessions by course" feature), and can preview a future moment via `?asOf=...` - a real, non-default use of `UpcomingOnly`'s optional argument
 - `StudySessionExtensions.Filter()`, where `GET /api/studysessions/summary` calling `Filter(minSeatsAvailable: ...)` shows named arguments being *necessary*, not just readable: skipping `course` (Filter's first parameter) to reach the second has no positional syntax at all
 - Controller / service / repository split: `StudySessionsController` only translates HTTP (depending on `IStudySessionService`), `StudySessionService` holds the rules, and `IStudySessionRepository` hides where sessions are stored - all wired together with Dependency Injection in `Program.cs` (SOLID: single responsibility, dependency inversion)
+- Sessions are stored in a SQLite database (`studyspot.db`, created on first run and never committed) through Entity Framework Core, with migrations applied automatically at startup - so data survives a restart
+- Async all the way down: controller actions, the service and the repository are `async`, and each request's `CancellationToken` reaches every database query
 
 The repository will change throughout the semester. Use Git history to compare lecture stages and understand why each change was introduced.
