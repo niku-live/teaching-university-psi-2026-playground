@@ -10,12 +10,12 @@
 * @ieva-petraityte
 
 # Backend
-/Controllers/ @ieva-petraityte @tjonaitis
-/Models/ @ieva-petraityte @tjonaitis
-/Program.cs @ieva-petraityte @tjonaitis
+/CoolApp/Controllers/ @ieva-petraityte @tjonaitis
+/CoolApp/Models/ @ieva-petraityte @tjonaitis
+/CoolApp/Program.cs @ieva-petraityte @tjonaitis
 
 # Frontend
-/ClientApp/ @mrimkute @dovydask
+/CoolApp/ClientApp/ @mrimkute @dovydask
 
 # Process and docs - any team member can own these.
 /docs/ @ieva-petraityte @tjonaitis @mrimkute @dovydask
