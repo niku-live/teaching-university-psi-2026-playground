@@ -96,6 +96,10 @@ npm run build
 | `CoolApp/Controllers/` | Backend API controllers - HTTP in, HTTP out, no business rules |
 | `CoolApp/Services/` | `IStudySessionService` and `StudySessionService`: the app's rules (filtering, ordering, ratings) |
 | `CoolApp/Repositories/` | `IStudySessionRepository` and its in-memory implementation: where sessions are stored |
+| `CoolApp.Tests/` | xUnit v3 tests: `Unit/` (service, `Rating`, a copying fake repository) and `Integration/` (the real API via `WebApplicationFactory`) - run with `dotnet test` from the root |
+| `CoolApp/ClientApp/src/**/*.test.js` | Jest + React Testing Library tests for the React app - run with `npm test` in `CoolApp/ClientApp/` |
+| `global.json` | Selects Microsoft.Testing.Platform as the `dotnet test` runner |
+| `dotnet-tools.json` | Local .NET tools (ReportGenerator for coverage reports) - run `dotnet tool restore` once after cloning |
 | `CoolApp/Pages/` | Server-rendered error page support |
 | `CoolApp/ClientApp/src/` | React application source |
 | `CoolApp/ClientApp/src/components/` | Example UI components |
@@ -131,5 +135,7 @@ npm run build
 - `GET /api/studysessions` filters by course and minimum seats available (Beta's "Filter sessions by course" feature), and can preview a future moment via `?asOf=...` - a real, non-default use of `UpcomingOnly`'s optional argument
 - `StudySessionExtensions.Filter()`, where `GET /api/studysessions/summary` calling `Filter(minSeatsAvailable: ...)` shows named arguments being *necessary*, not just readable: skipping `course` (Filter's first parameter) to reach the second has no positional syntax at all
 - Controller / service / repository split: `StudySessionsController` only translates HTTP (depending on `IStudySessionService`), `StudySessionService` holds the rules, and `IStudySessionRepository` hides where sessions are stored - all wired together with Dependency Injection in `Program.cs` (SOLID: single responsibility, dependency inversion)
+- Automated tests: xUnit v3 unit and integration tests (`dotnet test`), Jest + React Testing Library frontend tests (`npm test` in `CoolApp/ClientApp/`), and a coverage report via `--coverage` + ReportGenerator (see WALKTHROUGH-08)
+- Async all the way down: controller actions, the service and the repository are `async`, and each request's `CancellationToken` is passed to the repository, which stops work for a cancelled request
 
 The repository will change throughout the semester. Use Git history to compare lecture stages and understand why each change was introduced.
