@@ -23,6 +23,8 @@ public class StudySessionsControllerTests
         _controller = new StudySessionsController(_service);
     }
 
+    private static CancellationToken Cancellation => TestContext.Current.CancellationToken;
+
     private static StudySession Session(int id) => new()
     {
         Id = id,
@@ -35,33 +37,33 @@ public class StudySessionsControllerTests
     };
 
     [Fact]
-    public void GetById_ServiceFindsTheSession_ReturnsIt()
+    public async Task GetById_ServiceFindsTheSession_ReturnsIt()
     {
         var session = Session(7);
-        _service.GetById(7).Returns(session);
+        _service.GetByIdAsync(7, Arg.Any<CancellationToken>()).Returns(session);
 
-        var result = _controller.GetById(7);
+        var result = await _controller.GetById(7, Cancellation);
 
         Assert.Same(session, result.Value);
     }
 
     [Fact]
-    public void GetById_ServiceReturnsNull_Returns404()
+    public async Task GetById_ServiceReturnsNull_Returns404()
     {
-        _service.GetById(7).Returns((StudySession?)null);
+        _service.GetByIdAsync(7, Arg.Any<CancellationToken>()).Returns((StudySession?)null);
 
-        var result = _controller.GetById(7);
+        var result = await _controller.GetById(7, Cancellation);
 
         Assert.IsType<NotFoundResult>(result.Result);
     }
 
     [Fact]
-    public void Create_ReturnsCreatedAtGetByIdWithTheNewId()
+    public async Task Create_ReturnsCreatedAtGetByIdWithTheNewId()
     {
         var created = Session(42);
-        _service.Create(Arg.Any<StudySession>()).Returns(created);
+        _service.CreateAsync(Arg.Any<StudySession>(), Arg.Any<CancellationToken>()).Returns(created);
 
-        var result = _controller.Create(Session(0));
+        var result = await _controller.Create(Session(0), Cancellation);
 
         var createdAt = Assert.IsType<CreatedAtActionResult>(result.Result);
         Assert.Equal(nameof(StudySessionsController.GetById), createdAt.ActionName);
@@ -72,22 +74,26 @@ public class StudySessionsControllerTests
     [Theory]
     [InlineData(true, typeof(NoContentResult))]
     [InlineData(false, typeof(NotFoundResult))]
-    public void RateSession_ServiceResult_MapsToStatusCode(bool rated, Type expected)
+    public async Task RateSession_ServiceResult_MapsToStatusCode(bool rated, Type expected)
     {
-        _service.Rate(7, 5).Returns(rated);
+        _service.RateAsync(7, 5, Arg.Any<CancellationToken>()).Returns(rated);
 
-        var result = _controller.RateSession(7, new RatingSubmission(5));
+        var result = await _controller.RateSession(7, new RatingSubmission(5), Cancellation);
 
         Assert.IsType(expected, result);
     }
 
-    // A mock: checks that the query parameters reach the service unchanged. Use this kind
-    // of check sparingly - it tests how the controller works, not what it returns.
+    // A mock: checks that the query parameters - and the request's CancellationToken -
+    // reach the service unchanged. A token the controller accepts but doesn't pass on
+    // cancels nothing, and only a check like this one notices. Use this kind of check
+    // sparingly: it tests how the controller works, not what it returns.
     [Fact]
-    public void GetAll_PassesTheFiltersToTheService()
+    public async Task GetAll_PassesTheFiltersAndTheTokenToTheService()
     {
-        _controller.GetAll(course: "PSI", minSeatsAvailable: 2);
+        using var request = new CancellationTokenSource();
 
-        _service.Received(1).GetUpcoming("PSI", 2, null);
+        await _controller.GetAll(request.Token, course: "PSI", minSeatsAvailable: 2);
+
+        await _service.Received(1).GetUpcomingAsync("PSI", 2, null, request.Token);
     }
 }
