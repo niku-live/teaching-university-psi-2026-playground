@@ -17,9 +17,18 @@ public class CopyingStudySessionRepository : IStudySessionRepository
         HostRating = s.HostRating
     };
 
-    public IReadOnlyList<StudySession> GetAll() => _inner.GetAll().Select(Copy).ToList();
-    public StudySession? GetById(int id) => _inner.GetById(id) is { } s ? Copy(s) : null;
-    public StudySession Add(StudySession session) => Copy(_inner.Add(Copy(session)));
-    public bool Update(StudySession session) => _inner.Update(Copy(session));
-    public bool Delete(int id) => _inner.Delete(id);
+    public async Task<IReadOnlyList<StudySession>> GetAllAsync(CancellationToken cancellationToken) =>
+        (await _inner.GetAllAsync(cancellationToken)).Select(Copy).ToList();
+
+    public async Task<StudySession?> GetByIdAsync(int id, CancellationToken cancellationToken) =>
+        await _inner.GetByIdAsync(id, cancellationToken) is { } s ? Copy(s) : null;
+
+    public async Task<StudySession> AddAsync(StudySession session, CancellationToken cancellationToken) =>
+        Copy(await _inner.AddAsync(Copy(session), cancellationToken));
+
+    public Task<bool> UpdateAsync(StudySession session, CancellationToken cancellationToken) =>
+        _inner.UpdateAsync(Copy(session), cancellationToken);
+
+    public Task<bool> DeleteAsync(int id, CancellationToken cancellationToken) =>
+        _inner.DeleteAsync(id, cancellationToken);
 }

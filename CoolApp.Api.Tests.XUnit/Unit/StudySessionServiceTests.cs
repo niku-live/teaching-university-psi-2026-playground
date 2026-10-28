@@ -23,8 +23,10 @@ public class StudySessionServiceTests
         _service = new StudySessionService(_repository);
     }
 
-    private StudySession AddSession(string topic, DateTimeOffset startsAt, string course = "Software Development I", int seats = 5) =>
-        _service.Create(new StudySession
+    private static CancellationToken Cancellation => TestContext.Current.CancellationToken;
+
+    private Task<StudySession> AddSessionAsync(string topic, DateTimeOffset startsAt, string course = "Software Development I", int seats = 5) =>
+        _service.CreateAsync(new StudySession
         {
             Course = course,
             Topic = topic,
@@ -32,30 +34,30 @@ public class StudySessionServiceTests
             StartsAt = startsAt,
             HostName = "Ieva",
             SeatsAvailable = seats
-        });
+        }, Cancellation);
 
     [Fact]
-    public void GetUpcoming_SessionsBeforeAsOf_AreLeftOut()
+    public async Task GetUpcoming_SessionsBeforeAsOf_AreLeftOut()
     {
         // Arrange
-        AddSession("Before the cutoff", AsOf.AddDays(-1));
-        AddSession("After the cutoff", AsOf.AddDays(1));
+        await AddSessionAsync("Before the cutoff", AsOf.AddDays(-1));
+        await AddSessionAsync("After the cutoff", AsOf.AddDays(1));
 
         // Act
-        var upcoming = _service.GetUpcoming(course: null, minSeatsAvailable: null, asOf: AsOf);
+        var upcoming = await _service.GetUpcomingAsync(course: null, minSeatsAvailable: null, asOf: AsOf, Cancellation);
 
         // Assert
         Assert.Equal(["After the cutoff"], upcoming.Select(s => s.Topic));
     }
 
     [Fact]
-    public void GetUpcoming_SessionsAddedOutOfOrder_AreSortedByStartTime()
+    public async Task GetUpcoming_SessionsAddedOutOfOrder_AreSortedByStartTime()
     {
-        AddSession("Third", AsOf.AddDays(3));
-        AddSession("First", AsOf.AddDays(1));
-        AddSession("Second", AsOf.AddDays(2));
+        await AddSessionAsync("Third", AsOf.AddDays(3));
+        await AddSessionAsync("First", AsOf.AddDays(1));
+        await AddSessionAsync("Second", AsOf.AddDays(2));
 
-        var upcoming = _service.GetUpcoming(course: null, minSeatsAvailable: null, asOf: AsOf);
+        var upcoming = await _service.GetUpcomingAsync(course: null, minSeatsAvailable: null, asOf: AsOf, Cancellation);
 
         Assert.Equal(["First", "Second", "Third"], upcoming.Select(s => s.Topic));
     }
@@ -65,19 +67,19 @@ public class StudySessionServiceTests
     [InlineData("software", 1)]
     [InlineData("SOFTWARE DEVELOPMENT", 1)]
     [InlineData("Algorithms", 0)]
-    public void GetUpcoming_CourseFilter_MatchesPartOfTheNameIgnoringCase(string course, int expectedCount)
+    public async Task GetUpcoming_CourseFilter_MatchesPartOfTheNameIgnoringCase(string course, int expectedCount)
     {
-        AddSession("Pull requests", AsOf.AddDays(1), course: "Software Development I");
+        await AddSessionAsync("Pull requests", AsOf.AddDays(1), course: "Software Development I");
 
-        var upcoming = _service.GetUpcoming(course, minSeatsAvailable: null, asOf: AsOf);
+        var upcoming = await _service.GetUpcomingAsync(course, minSeatsAvailable: null, asOf: AsOf, Cancellation);
 
         Assert.Equal(expectedCount, upcoming.Count());
     }
 
     [Fact]
-    public void Update_ExistingSession_ChangeIsVisibleThroughGetById()
+    public async Task Update_ExistingSession_ChangeIsVisibleThroughGetById()
     {
-        var session = AddSession("Old topic", AsOf.AddDays(1));
+        var session = await AddSessionAsync("Old topic", AsOf.AddDays(1));
         var changed = new StudySession
         {
             Course = session.Course,
@@ -88,36 +90,49 @@ public class StudySessionServiceTests
             SeatsAvailable = 2
         };
 
-        var updated = _service.Update(session.Id, changed);
+        var updated = await _service.UpdateAsync(session.Id, changed, Cancellation);
 
         Assert.True(updated);
-        var stored = _service.GetById(session.Id)!;
+        var stored = (await _service.GetByIdAsync(session.Id, Cancellation))!;
         Assert.Equal("New topic", stored.Topic);
         Assert.Equal(2, stored.SeatsAvailable);
     }
 
     [Fact]
-    public void Update_UnknownId_ReturnsFalse()
+    public async Task Update_UnknownId_ReturnsFalse()
     {
-        var updated = _service.Update(999, new StudySession());
+        var updated = await _service.UpdateAsync(999, new StudySession(), Cancellation);
 
         Assert.False(updated);
     }
 
     [Fact]
-    public void Rate_ExistingSession_StoresTheRating()
+    public async Task Rate_ExistingSession_StoresTheRating()
     {
-        var session = AddSession("Rated session", AsOf.AddDays(1));
+        var session = await AddSessionAsync("Rated session", AsOf.AddDays(1));
 
-        var rated = _service.Rate(session.Id, 4);
+        var rated = await _service.RateAsync(session.Id, 4, Cancellation);
 
         Assert.True(rated);
-        Assert.Equal(new Rating(4), _service.GetById(session.Id)!.HostRating);
+        var stored = (await _service.GetByIdAsync(session.Id, Cancellation))!;
+        Assert.Equal(new Rating(4), stored.HostRating);
     }
 
     [Fact]
-    public void Rate_UnknownId_ReturnsFalse()
+    public async Task Rate_UnknownId_ReturnsFalse()
     {
-        Assert.False(_service.Rate(999, 4));
+        Assert.False(await _service.RateAsync(999, 4, Cancellation));
+    }
+
+    // Cancellation is part of the contract too: a request that was already cancelled
+    // (the client disconnected) must not do any work.
+    [Fact]
+    public async Task GetUpcoming_CancelledToken_ThrowsOperationCanceledException()
+    {
+        using var cancellation = new CancellationTokenSource();
+        await cancellation.CancelAsync();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(
+            () => _service.GetUpcomingAsync(course: null, minSeatsAvailable: null, asOf: AsOf, cancellation.Token));
     }
 }
