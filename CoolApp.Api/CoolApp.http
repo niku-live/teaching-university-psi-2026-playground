@@ -18,7 +18,7 @@ Accept: application/json
 
 ### Create a new study session
 # startsAt carries an explicit "Z" (UTC) offset, same as the browser form now sends -
-# a bare "2026-09-23T18:00:00" would be interpreted as *this server's* local time.
+# a bare "2027-09-23T18:00:00" would be interpreted as *this server's* local time.
 POST {{HostAddress}}/api/studysessions
 Content-Type: application/json
 
@@ -26,7 +26,7 @@ Content-Type: application/json
   "course": "Software Development I",
   "topic": "Testing your own API",
   "location": "MIF, room 401",
-  "startsAt": "2026-09-23T18:00:00Z",
+  "startsAt": "2027-09-23T18:00:00Z",
   "hostName": "You",
   "seatsAvailable": 4
 }
@@ -39,7 +39,7 @@ Content-Type: application/json
   "course": "Software Development I",
   "topic": "Small informal recap, no more room",
   "location": "MIF, room 401",
-  "startsAt": "2026-09-23T18:00:00Z",
+  "startsAt": "2027-09-23T18:00:00Z",
   "hostName": "You",
   "seatsAvailable": 0
 }
@@ -52,7 +52,7 @@ Content-Type: application/json
   "course": "Software Development I",
   "topic": "Pull request etiquette",
   "location": "MIF, room 401",
-  "startsAt": "2026-09-24T18:00:00Z",
+  "startsAt": "2027-09-24T18:00:00Z",
   "hostName": "Ieva",
   "seatsAvailable": 1
 }
@@ -98,7 +98,7 @@ GET {{HostAddress}}/api/studysessions?minSeatsAvailable=4
 Accept: application/json
 
 ### Preview what's upcoming as of a future moment (asOf), instead of right now
-GET {{HostAddress}}/api/studysessions?asOf=2026-10-15T00:00:00Z
+GET {{HostAddress}}/api/studysessions?asOf=2027-01-01T00:00:00Z
 Accept: application/json
 
 ### Summaries filtered by minimum seats available only - there's no course filter here on purpose
