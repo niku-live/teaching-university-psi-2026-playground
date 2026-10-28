@@ -31,9 +31,9 @@ Requirement coverage still needed:
 - [ ] Request/response DTOs (e.g. `CreateStudySessionDto`/`StudySessionDto`) separating the API contract from the EF entity - introduce alongside EF itself, once there's a real entity (with tracking/navigation properties) worth not leaking over the wire; `StudySessionSummary` (Lecture 04) is a lightweight preview of the same idea
 - [ ] A generic type/method (e.g. a generic `Repository<T>` used for `StudySession` and one other entity)
 - [ ] A custom exception type, thrown and handled meaningfully (e.g. `SessionFullException` when RSVP-ing to a full session)
-- [ ] `async`/`await` for all I/O (database calls, no synchronous DB access)
+- [ ] `async`/`await` for all I/O (database calls, no synchronous DB access) (started in Lecture 08: the repository, service and controller are already async and pass the request's `CancellationToken` down - the database calls themselves arrive with Entity Framework)
 - [x] Dependency Injection used for the repository/service layer instead of `new`-ing dependencies (landed early in Lecture 06: `IStudySessionService`/`StudySessionService` + `IStudySessionRepository`, backed by an in-memory implementation until Entity Framework arrives)
-- [ ] Unit and integration test coverage of at least 50%
+- [x] Unit and integration test coverage of at least 50% (Lecture 08: `CoolApp.Tests` with xUnit v3 unit tests, controller tests with NSubstitute and `WebApplicationFactory` integration tests - about 80% line coverage of the backend, generated code excluded - plus Jest + React Testing Library tests for the session form, about 63% of the React code; about 71% combined)
 
 ## Final - matches Lab Assignment #3 (lectures 11-14)
 
