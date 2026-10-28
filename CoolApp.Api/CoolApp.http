@@ -44,7 +44,12 @@ Content-Type: application/json
   "seatsAvailable": 0
 }
 
-### Update a study session
+### Read a session before editing it - note its "version"
+# @name sessionToEdit
+GET {{HostAddress}}/api/studysessions/1
+Accept: application/json
+
+### Update it, sending back the version you read (expect 204 No Content)
 PUT {{HostAddress}}/api/studysessions/1
 Content-Type: application/json
 
@@ -54,7 +59,22 @@ Content-Type: application/json
   "location": "MIF, room 401",
   "startsAt": "2027-09-24T18:00:00Z",
   "hostName": "Ieva",
-  "seatsAvailable": 1
+  "seatsAvailable": 1,
+  "version": {{sessionToEdit.response.body.$.version}}
+}
+
+### Send the same update again - its version is now outdated (expect 409 Conflict, a problem details body)
+PUT {{HostAddress}}/api/studysessions/1
+Content-Type: application/json
+
+{
+  "course": "Software Development I",
+  "topic": "Pull request etiquette",
+  "location": "MIF, room 401",
+  "startsAt": "2027-09-24T18:00:00Z",
+  "hostName": "Ieva",
+  "seatsAvailable": 1,
+  "version": {{sessionToEdit.response.body.$.version}}
 }
 
 ### Delete a study session

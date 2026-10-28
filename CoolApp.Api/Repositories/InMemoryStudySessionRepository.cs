@@ -2,10 +2,11 @@ using CoolApp.Models;
 
 namespace CoolApp.Repositories;
 
-// In-memory sample data. A real implementation would use a database (see Lab Assignment #2).
+// In-memory sample data. The app itself now uses EfStudySessionRepository; this one stays
+// for the unit tests, which need a fast, real repository with no database behind it.
 //
-// Registered as a singleton in Program.cs: the data lives in this instance's list, so a
-// new instance per request would forget every session between requests.
+// If you register it in Program.cs, make it a singleton: the data lives in this
+// instance's list, so a new instance per request would forget every session.
 public class InMemoryStudySessionRepository : IStudySessionRepository
 {
     private readonly List<StudySession> _sessions = new()

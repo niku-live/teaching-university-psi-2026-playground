@@ -3,9 +3,10 @@ using CoolApp.Models;
 namespace CoolApp.Repositories;
 
 // The abstraction the rest of the app depends on (Dependency Inversion): callers say
-// *what* they need stored and retrieved, never *where* it lives. Today the only
-// implementation keeps sessions in memory; Beta swaps in Entity Framework without
-// touching anything that uses this interface.
+// *what* they need stored and retrieved, never *where* it lives. The app uses
+// EfStudySessionRepository (SQLite through Entity Framework); the unit tests use
+// InMemoryStudySessionRepository. Swapping one for the other touched nothing that uses
+// this interface.
 //
 // The contract is part of the interface, not just the signatures - every implementation
 // has to honor it, or callers can't safely substitute one for another (Liskov):
@@ -13,6 +14,9 @@ namespace CoolApp.Repositories;
 //   - GetById may hand back the stored instance *or a copy*. Callers must not rely on
 //     mutating what they got back - the only way to persist a change is Update.
 //   - Update and Delete return false (and change nothing) when the id doesn't exist.
+//   - Update throws StudySessionConflictException (and changes nothing) when the session
+//     was changed since the caller read it - session.Version is the version they read.
+//     An implementation that can't tell (InMemoryStudySessionRepository) never throws it.
 //   - A cancelled token stops the work: the method throws OperationCanceledException
 //     instead of reading or changing anything.
 //
