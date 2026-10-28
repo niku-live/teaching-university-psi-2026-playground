@@ -230,3 +230,8 @@ _Pvt_Extensions
 
 # FAKE - F# Make
 .fake/
+
+# Local SQLite database (Lecture 08) - created by `dotnet run`, never committed
+*.db
+*.db-shm
+*.db-wal
