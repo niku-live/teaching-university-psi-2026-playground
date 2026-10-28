@@ -8,6 +8,8 @@
     <IsPackable>false</IsPackable>
     <SpaRoot>ClientApp\</SpaRoot>
     <DefaultItemExcludes>$(DefaultItemExcludes);$(SpaRoot)node_modules\**</DefaultItemExcludes>
+    <!-- The test project lives in a subfolder; keep its files out of the app itself -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);CoolApp.Tests\**</DefaultItemExcludes>
     <SpaProxyServerUrl>https://localhost:44406</SpaProxyServerUrl>
     <SpaProxyLaunchCommand>npm start</SpaProxyLaunchCommand>
     <ImplicitUsings>enable</ImplicitUsings>
