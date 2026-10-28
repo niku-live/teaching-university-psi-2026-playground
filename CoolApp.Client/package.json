@@ -30,6 +30,8 @@
     "workbox-streams": "^6.5.4"
   },
   "devDependencies": {
+    "@testing-library/dom": "10.4.2",
+    "@testing-library/react": "16.3.3",
     "ajv": "^8.12.0",
     "cross-env": "^7.0.3",
     "eslint": "^8.39.0",
@@ -50,9 +52,27 @@
     "prestart": "node aspnetcore-https && node aspnetcore-react",
     "start": "rimraf ./build && react-scripts start",
     "build": "react-scripts build",
-    "test": "cross-env CI=true react-scripts test --env=jsdom",
+    "test": "cross-env CI=true react-scripts test --env=jsdom --roots=src --roots=tests",
     "eject": "react-scripts eject",
-    "lint": "eslint ./src/"
+    "lint": "eslint ./src/",
+    "test:coverage": "npm test -- --coverage"
+  },
+  "jest": {
+    "testMatch": [
+      "<rootDir>/tests/**/*.test.js"
+    ],
+    "collectCoverageFrom": [
+      "src/**/*.js",
+      "!src/index.js",
+      "!src/reportWebVitals.js",
+      "!src/service-worker.js",
+      "!src/serviceWorkerRegistration.js",
+      "!src/setupProxy.js"
+    ],
+    "coverageReporters": [
+      "text-summary",
+      "cobertura"
+    ]
   },
   "eslintConfig": {
     "extends": [
