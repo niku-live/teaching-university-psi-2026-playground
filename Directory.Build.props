@@ -1,0 +1,18 @@
+<Project>
+
+  <!-- Applies to every .NET project below this folder (the API and all three test projects):
+       the coding standard, checked by the build instead of only by whoever reviews the PR. -->
+  <PropertyGroup>
+    <!-- The recommended set of .NET code quality rules (CAxxxx) for the current SDK -->
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+    <!-- The code style rules in .editorconfig (IDExxxx) are checked by the build too, not only in the IDE -->
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!-- Still reported, but they don't fail the build:
+         CA1502/CA1506 - a complexity number over the limit is a reason to look at the code, not proof it is wrong;
+         NU1901-NU1904 - a vulnerability published tomorrow in a package we use would otherwise break
+         every build overnight. "dotnet list package" with the vulnerable option lists them. -->
+    <WarningsNotAsErrors>CA1502;CA1506;NU1901;NU1902;NU1903;NU1904</WarningsNotAsErrors>
+  </PropertyGroup>
+
+</Project>

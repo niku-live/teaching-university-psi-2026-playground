@@ -37,5 +37,6 @@ public class StudySpotApiFactory : WebApplicationFactory<Program>, IAsyncLifetim
         // SQLite keeps pooled connections open, which keeps the file locked on Windows.
         SqliteConnection.ClearAllPools();
         File.Delete(_databasePath);
+        GC.SuppressFinalize(this);
     }
 }
