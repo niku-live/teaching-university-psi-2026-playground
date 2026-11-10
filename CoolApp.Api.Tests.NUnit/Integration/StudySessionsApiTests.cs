@@ -1,32 +1,22 @@
 using System.Net;
 using System.Net.Http.Json;
 using CoolApp.Models;
-using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.Mvc;
 
 namespace CoolApp.Api.Tests.NUnit.Integration;
 
-// The NUnit version of CoolApp.Api.Tests.XUnit/Integration/StudySessionsApiTests.cs. xUnit's
-// IClassFixture becomes [OneTimeSetUp]/[OneTimeTearDown]: they run once for the whole
-// class, so all tests share one running application, and each test still creates the
-// sessions it needs.
+// The NUnit version of CoolApp.Api.Tests.XUnit/Integration/StudySessionsApiTests.cs. The
+// application and its database are started once for all classes (see StudySpotApi), so
+// each test creates the sessions it needs.
 public class StudySessionsApiTests
 {
-    private WebApplicationFactory<Program> _factory = null!;
     private HttpClient _client = null!;
 
-    [OneTimeSetUp]
-    public void StartApplication()
-    {
-        _factory = new WebApplicationFactory<Program>();
-        _client = _factory.CreateClient();
-    }
+    [SetUp]
+    public void CreateClient() => _client = StudySpotApi.Factory.CreateClient();
 
-    [OneTimeTearDown]
-    public void StopApplication()
-    {
-        _client.Dispose();
-        _factory.Dispose();
-    }
+    [TearDown]
+    public void DisposeClient() => _client.Dispose();
 
     private static CancellationToken Cancellation => TestContext.CurrentContext.CancellationToken;
 
@@ -84,6 +74,36 @@ public class StudySessionsApiTests
         var json = await _client.GetStringAsync(created.Headers.Location, Cancellation);
 
         Assert.That(json, Does.Contain("\"status\":\"Scheduled\""));
+    }
+
+    [Test]
+    public async Task Update_WithTheVersionJustRead_Returns204()
+    {
+        var created = await _client.PostAsJsonAsync("/api/studysessions", ValidSession("Fresh edit"), Cancellation);
+        var session = await _client.GetFromJsonAsync<StudySession>(created.Headers.Location, Cancellation);
+
+        session!.SeatsAvailable = 2;
+        var response = await _client.PutAsJsonAsync(created.Headers.Location, session, Cancellation);
+
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.NoContent));
+    }
+
+    [Test]
+    public async Task Update_WithAVersionSomeoneElseAlreadyChanged_Returns409Problem()
+    {
+        var created = await _client.PostAsJsonAsync("/api/studysessions", ValidSession("Two editors"), Cancellation);
+        var first = await _client.GetFromJsonAsync<StudySession>(created.Headers.Location, Cancellation);
+        var second = await _client.GetFromJsonAsync<StudySession>(created.Headers.Location, Cancellation);
+
+        first!.SeatsAvailable = 2;
+        await _client.PutAsJsonAsync(created.Headers.Location, first, Cancellation);
+        second!.Location = "Library, 2nd floor";
+        var response = await _client.PutAsJsonAsync(created.Headers.Location, second, Cancellation);
+
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.Conflict));
+        Assert.That(response.Content.Headers.ContentType?.MediaType, Is.EqualTo("application/problem+json"));
+        var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>(Cancellation);
+        Assert.That(problem!.Title, Is.EqualTo("The study session was changed by someone else"));
     }
 
     [Test]

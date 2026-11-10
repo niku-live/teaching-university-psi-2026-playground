@@ -1517,4 +1517,4 @@ Update `ROADMAP.md` (the Beta item "`async`/`await` for all I/O" now has its asy
 - End-to-end tests with Playwright, which run the React app in a real browser against the running API.
 - Storing sessions in a real database with Entity Framework Core: a second implementation of the now-async `IStudySessionRepository`, swapped in with one line in `Program.cs`, with the tests from this walkthrough checking that nothing else changed.
 
-See [WALKTHROUGHS.md](WALKTHROUGHS.md) for later lectures' walkthroughs as they're added.
+The database part is next: [WALKTHROUGH-09.md](WALKTHROUGH-09.md). See [WALKTHROUGHS.md](WALKTHROUGHS.md) for every walkthrough.

@@ -1,18 +1,18 @@
 using System.Net;
 using System.Net.Http.Json;
 using CoolApp.Models;
-using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.Mvc;
 
 namespace CoolApp.Api.Tests.XUnit.Integration;
 
-// Starts the real application (Program.cs) in memory with WebApplicationFactory and talks
-// to it over HTTP. These test what the unit tests cannot: routing, model validation, JSON
-// serialization and the Dependency Injection registrations.
+// Starts the real application (Program.cs) in memory and talks to it over HTTP. These
+// test what the unit tests cannot: routing, model validation, JSON serialization, the
+// Dependency Injection registrations - and now a real database (see StudySpotApiFactory).
 //
-// IClassFixture: one application is started for all tests in this class, because starting
-// it for every test would be slow. The tests share its in-memory data, so each test
-// creates the sessions it needs instead of relying on what another test left behind.
-public class StudySessionsApiTests(WebApplicationFactory<Program> factory) : IClassFixture<WebApplicationFactory<Program>>
+// One application (and one database) is shared by all tests, because starting it for
+// every test would be slow. So each test creates the sessions it needs instead of
+// relying on what another test left behind.
+public class StudySessionsApiTests(StudySpotApiFactory factory)
 {
     private readonly HttpClient _client = factory.CreateClient();
 
@@ -74,6 +74,39 @@ public class StudySessionsApiTests(WebApplicationFactory<Program> factory) : ICl
         // Checks the JSON contract the frontend relies on: the enum is sent as its name
         // (JsonStringEnumConverter in Program.cs), not as a number.
         Assert.Contains("\"status\":\"Scheduled\"", json);
+    }
+
+    [Fact]
+    public async Task Update_WithTheVersionJustRead_Returns204()
+    {
+        var created = await _client.PostAsJsonAsync("/api/studysessions", ValidSession("Fresh edit"), Cancellation);
+        var session = await _client.GetFromJsonAsync<StudySession>(created.Headers.Location, Cancellation);
+
+        session!.SeatsAvailable = 2;
+        var response = await _client.PutAsJsonAsync(created.Headers.Location, session, Cancellation);
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+    }
+
+    // Two people load the same session; the first one saves, then the second one saves
+    // with the version they read before that. The second change must not silently
+    // overwrite the first one: StudySessionConflictException becomes a 409 problem.
+    [Fact]
+    public async Task Update_WithAVersionSomeoneElseAlreadyChanged_Returns409Problem()
+    {
+        var created = await _client.PostAsJsonAsync("/api/studysessions", ValidSession("Two editors"), Cancellation);
+        var first = await _client.GetFromJsonAsync<StudySession>(created.Headers.Location, Cancellation);
+        var second = await _client.GetFromJsonAsync<StudySession>(created.Headers.Location, Cancellation);
+
+        first!.SeatsAvailable = 2;
+        await _client.PutAsJsonAsync(created.Headers.Location, first, Cancellation);
+        second!.Location = "Library, 2nd floor";
+        var response = await _client.PutAsJsonAsync(created.Headers.Location, second, Cancellation);
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+        var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>(Cancellation);
+        Assert.Equal("The study session was changed by someone else", problem!.Title);
     }
 
     [Fact]
