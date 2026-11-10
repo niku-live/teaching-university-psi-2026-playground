@@ -236,3 +236,6 @@ coverage-report/
 
 # The local SQLite database (Lecture 09) - created by the app on first run, never committed
 studyspot.db*
+
+# Stryker.NET mutation testing reports (Lecture 10)
+StrykerOutput/
