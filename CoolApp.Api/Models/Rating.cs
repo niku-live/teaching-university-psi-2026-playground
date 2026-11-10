@@ -9,8 +9,8 @@ namespace CoolApp.Models;
 // (default(Rating), or new Rating[n]) producing Value = 0, bypassing this constructor
 // entirely. No struct can fully prevent that; it's a language-level guarantee, not a
 // bug here. In this codebase HostRating is only ever assigned from RatingSubmission's
-// already-validated int (see [BindNever] on StudySession.HostRating, which keeps a
-// client from setting it by just including it in a POST/PUT body directly), so the
+// already-validated int (the create/update DTOs have no HostRating, so a client can't
+// set it by just including it in a POST/PUT body), so the
 // gap never actually opens in practice - but it's real, and worth knowing about before
 // relying on "the constructor always runs" for any other struct.
 public readonly struct Rating
