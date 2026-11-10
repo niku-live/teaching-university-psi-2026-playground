@@ -38,6 +38,15 @@ public class StudySession : IValidatableObject, IComparable<StudySession>
     [BindNever]
     public Rating? HostRating { get; set; }
 
+    // Optimistic concurrency: [ConcurrencyCheck] makes EF add the version it read to the
+    // WHERE of every UPDATE. EfStudySessionRepository raises it by one on every save, so
+    // if someone else saved the session since it was read, no row matches and
+    // SaveChanges throws DbUpdateConcurrencyException instead of overwriting their change.
+    //
+    // A client sends back the Version it read (GET) with its change (PUT).
+    [ConcurrencyCheck]
+    public int Version { get; set; }
+
     // Lets sessions sort by start time via List<T>.Sort() or Array.Sort(), with
     // no comparer to pass in - the type itself defines what "in order" means.
     //

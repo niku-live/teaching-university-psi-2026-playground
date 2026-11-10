@@ -96,12 +96,15 @@ npm run build
 | `CoolApp.Api/Models/` | Backend domain models |
 | `CoolApp.Api/Controllers/` | Backend API controllers - HTTP in, HTTP out, no business rules |
 | `CoolApp.Api/Services/` | `IStudySessionService` and `StudySessionService`: the app's rules (filtering, ordering, ratings) |
-| `CoolApp.Api/Repositories/` | `IStudySessionRepository` and its in-memory implementation: where sessions are stored |
-| `CoolApp.Api.Tests.XUnit/` | xUnit v3 tests for the API: `Unit/` (service, `Rating`, a copying fake repository, the controller with an NSubstitute service) and `Integration/` (the real API via `WebApplicationFactory`) - run with `dotnet test` from the root |
+| `CoolApp.Api/Repositories/` | `IStudySessionRepository` and its two implementations: `EfStudySessionRepository` (the app, SQLite via Entity Framework Core) and `InMemoryStudySessionRepository` (the unit tests) |
+| `CoolApp.Api/Data/` | `StudySpotDbContext`: the Entity Framework model, its configuration and the sample data |
+| `CoolApp.Api/Migrations/` | Entity Framework migrations, generated with `dotnet ef migrations add` and applied on startup in Development |
+| `CoolApp.Api/Exceptions/`, `CoolApp.Api/ExceptionHandling/` | `StudySessionConflictException` and the `IExceptionHandler` that turns it into a `409 Conflict` for every endpoint |
+| `CoolApp.Api.Tests.XUnit/` | xUnit v3 tests for the API: `Unit/` (service, `Rating`, a copying fake repository, the controller with an NSubstitute service) and `Integration/` (the real API via `WebApplicationFactory`, with its own SQLite database file) - run with `dotnet test` from the root |
 | `CoolApp.Api.Tests.NUnit/`, `CoolApp.Api.Tests.MSTest/` | The same tests written with NUnit and with MSTest, to compare the three frameworks side by side. They are not in `CoolApp.sln`, so run them by name: `dotnet test --project CoolApp.Api.Tests.NUnit` |
 | `CoolApp.Client/tests/` | Jest + React Testing Library tests for the React app, kept out of `src/` - run with `npm test` (or `npm run test:coverage`) in `CoolApp.Client/` |
 | `global.json` | Selects Microsoft.Testing.Platform as the `dotnet test` runner |
-| `dotnet-tools.json` | Local .NET tools (ReportGenerator for coverage reports) - run `dotnet tool restore` once after cloning |
+| `dotnet-tools.json` | Local .NET tools (ReportGenerator for coverage reports, `dotnet ef` for migrations) - run `dotnet tool restore` once after cloning |
 | `CoolApp.Api/Pages/` | Server-rendered error page support |
 | `CoolApp.Client/` | The React app (its own `package.json`), next to the API rather than inside it |
 | `CoolApp.Client/src/` | React application source |
@@ -140,5 +143,7 @@ npm run build
 - Controller / service / repository split: `StudySessionsController` only translates HTTP (depending on `IStudySessionService`), `StudySessionService` holds the rules, and `IStudySessionRepository` hides where sessions are stored - all wired together with Dependency Injection in `Program.cs` (SOLID: single responsibility, dependency inversion)
 - Automated tests: xUnit v3 unit, controller and integration tests (`dotnet test`), the same tests in NUnit and MSTest for comparison, Jest + React Testing Library frontend tests (`npm test` in `CoolApp.Client/`), and one coverage report for both via `--coverage`, `npm run test:coverage` and ReportGenerator (see WALKTHROUGH-08)
 - Async all the way down: controller actions, the service and the repository are `async`, and each request's `CancellationToken` is passed to the repository, which stops work for a cancelled request
+- Sessions are stored in SQLite with Entity Framework Core (`StudySpotDbContext`, `EfStudySessionRepository`), with migrations applied and sample data seeded on startup in Development - swapped in behind `IStudySessionRepository` with one line in `Program.cs` (see WALKTHROUGH-09)
+- Optimistic concurrency: every session has a `Version`; a `PUT` with an outdated version throws our own `StudySessionConflictException`, which `StudySessionConflictExceptionHandler` (an `IExceptionHandler`) turns into a `409 Conflict` problem details response instead of silently overwriting someone else's change
 
 The repository will change throughout the semester. Use Git history to compare lecture stages and understand why each change was introduced.
