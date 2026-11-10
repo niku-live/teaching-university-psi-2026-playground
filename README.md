@@ -106,6 +106,7 @@ npm run build
 | `CoolApp.Api.Tests.NUnit/`, `CoolApp.Api.Tests.MSTest/` | The same tests written with NUnit and with MSTest, to compare the three frameworks side by side. They are not in `CoolApp.sln`, so run them by name: `dotnet test --project CoolApp.Api.Tests.NUnit` |
 | `CoolApp.Client/tests/` | Jest + React Testing Library tests for the React app, kept out of `src/` - run with `npm test` (or `npm run test:coverage`) in `CoolApp.Client/` |
 | `global.json` | Selects Microsoft.Testing.Platform as the `dotnet test` runner |
+| `Directory.Build.props`, `.editorconfig` | The coding standard every .NET project gets, checked by the build: analyzers, style rules, and the exceptions with their reasons (Lecture 10) |
 | `dotnet-tools.json` | Local .NET tools (ReportGenerator for coverage reports, `dotnet ef` for migrations) - run `dotnet tool restore` once after cloning |
 | `CoolApp.Api/Pages/` | Server-rendered error page support |
 | `CoolApp.Client/` | The React app (its own `package.json`), next to the API rather than inside it |
