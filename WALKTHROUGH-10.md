@@ -41,7 +41,7 @@ The .NET SDK ships with code analyzers: rules named `CAxxxx` (code quality: desi
 dotnet build
 ```
 
-On StudySpot the build still succeeds, with 33 warnings of three kinds:
+On StudySpot the build still succeeds, with 26 warnings of three kinds:
 
 - `CA1707` "Remove the underscores from member name" - in every test, because the tests are named `Method_Scenario_Result` (Lecture 08).
 - `CA1036` "StudySession should define operators `==`, `!=`, `<`, `<=`, `>`, `>=` and Equals since it implements IComparable".
@@ -135,7 +135,7 @@ Now that there are no warnings, keep it that way. Add `TreatWarningsAsErrors` an
 </Project>
 ```
 
-- `TreatWarningsAsErrors` fails the build on any warning, so a new one can't be merged "for now". Turning it on only once the code is clean is how a standard is adopted in existing code (theory lecture, "Adopting standards in existing code"): with 33 warnings, the build would have stopped at the first project with an error.
+- `TreatWarningsAsErrors` fails the build on any warning, so a new one can't be merged "for now". Turning it on only once the code is clean is how a standard is adopted in existing code (theory lecture, "Adopting standards in existing code"): with 26 warnings, the build would have stopped at the first project with an error.
 - `WarningsNotAsErrors` keeps a few as warnings, each for a reason: complexity numbers are a reason to look, not proof something is wrong, and a vulnerability published tomorrow in a package you use shouldn't break every build overnight (the `NU190x` warnings come from NuGet's audit).
 
 ```pwsh
