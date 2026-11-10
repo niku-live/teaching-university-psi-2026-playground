@@ -150,7 +150,7 @@ npm run build
 - Optimistic concurrency: every session has a `Version`; a `PUT` with an outdated version throws our own `StudySessionConflictException`, which `StudySessionConflictExceptionHandler` (an `IExceptionHandler`) turns into a `409 Conflict` problem details response instead of silently overwriting someone else's change
 - The coding standard is checked by the build: `Directory.Build.props` (recommended analyzers, style rules enforced in the build, warnings as errors) and `.editorconfig` (style rules, complexity rules, and every exception with its reason) - see WALKTHROUGH-10
 - Request and response DTOs (`CoolApp.Api/Dtos/`): the controller takes `CreateStudySessionDto`/`UpdateStudySessionDto` and returns `StudySessionDto`, so the EF entity is no longer the API contract and a client can't over-post fields like `version`
-- A generic `ICache<TKey, TValue>` with a thread-safe `InMemoryCache<TKey, TValue>` on a `ConcurrentDictionary`, registered once as an open generic singleton and shared by every request through `CachedStudySessionService`, a decorator around the service
+- A generic `ICache<TKey, TValue>` with a thread-safe `InMemoryCache<TKey, TValue>` on a `ConcurrentDictionary`, registered once as an open generic singleton and shared by every request through `CachedStudySessionService`, a decorator around the service whose generic `ChangeThenForgetAsync<TResult>` method invalidates the cache after every change
 - Optional mutation testing with Stryker.NET (`dotnet stryker`, a local tool)
 
 The repository will change throughout the semester. Use Git history to compare lecture stages and understand why each change was introduced.

@@ -2,7 +2,7 @@
 
 This is the step-by-step walkthrough behind [Lecture 10](https://github.com/niku-live/teaching-university-psi-2026/tree/main/Lecture10): letting the **build** check the code against a coding standard (the .NET code analyzers and `.editorconfig`), then separating the API contract from the database entity with **DTOs**, and adding a **generic** in-memory cache on a **`ConcurrentDictionary`**, which every request shares. See [WALKTHROUGHS.md](WALKTHROUGHS.md) for the full list of per-lecture walkthroughs.
 
-This assumes you already have a working project at the state described in [WALKTHROUGH-09.md](WALKTHROUGH-09.md): the API in `CoolApp.Api/` with Entity Framework Core behind `IStudySessionRepository`, a service layer, and an xUnit test project. Apply these same steps to **your own team's project**, not just this repository. Stage 1 follows the [Software Construction theory lecture](https://github.com/smagurauskas/software-engineering/blob/main/09-software-construction.qmd) (standards enforced by the build, complexity metrics, mutation testing); stage 2 the [Generics theory lecture](https://github.com/smagurauskas/software-engineering/blob/main/09-generics.qmd). Stage 2 covers the last open Lab Assignment #2 requirements: "create and use at least 1 generic type" and "a shared memory scenario handled with concurrent collections or locks", plus request and response DTOs.
+This assumes you already have a working project at the state described in [WALKTHROUGH-09.md](WALKTHROUGH-09.md): the API in `CoolApp.Api/` with Entity Framework Core behind `IStudySessionRepository`, a service layer, and an xUnit test project. Apply these same steps to **your own team's project**, not just this repository. Stage 1 follows the [Software Construction theory lecture](https://github.com/smagurauskas/software-engineering/blob/main/09-software-construction.qmd) (standards enforced by the build, complexity metrics, mutation testing); stage 2 the [Generics theory lecture](https://github.com/smagurauskas/software-engineering/blob/main/09-generics.qmd). Stage 2 covers the last open Lab Assignment #2 requirements: "a generic type with a generic method" and "a shared memory scenario handled with concurrent collections or locks", plus request and response DTOs.
 
 The work happens in **two stages, and the project builds and all tests pass at the end of each one**:
 
@@ -534,31 +534,29 @@ public class CachedStudySessionService(StudySessionService inner, ICache<int, St
     public Task<StudySession?> GetByIdAsync(int id, CancellationToken cancellationToken) =>
         cache.GetOrAddAsync(id, inner.GetByIdAsync, cancellationToken);
 
-    public async Task<bool> UpdateAsync(int id, StudySession session, CancellationToken cancellationToken)
+    public Task<bool> UpdateAsync(int id, StudySession session, CancellationToken cancellationToken) =>
+        ChangeThenForgetAsync(id, () => inner.UpdateAsync(id, session, cancellationToken));
+
+    public Task<bool> DeleteAsync(int id, CancellationToken cancellationToken) =>
+        ChangeThenForgetAsync(id, () => inner.DeleteAsync(id, cancellationToken));
+
+    public Task<bool> RateAsync(int id, int value, CancellationToken cancellationToken) =>
+        ChangeThenForgetAsync(id, () => inner.RateAsync(id, value, cancellationToken));
+
+    // A generic method: runs any change, whatever type it returns, and then removes the session
+    // from the cache - also when the change throws (after a 409 conflict someone else has changed
+    // the session, so the cached copy is old). One copy of this try/finally instead of one per
+    // change; TResult is inferred from the lambda, so the callers never write it.
+    private async Task<TResult> ChangeThenForgetAsync<TResult>(int id, Func<Task<TResult>> change)
     {
         try
         {
-            return await inner.UpdateAsync(id, session, cancellationToken);
+            return await change();
         }
         finally
         {
-            // Also after a 409 conflict: someone else changed the session, so the cached copy is old.
             cache.Remove(id);
         }
-    }
-
-    public async Task<bool> DeleteAsync(int id, CancellationToken cancellationToken)
-    {
-        var deleted = await inner.DeleteAsync(id, cancellationToken);
-        cache.Remove(id);
-        return deleted;
-    }
-
-    public async Task<bool> RateAsync(int id, int value, CancellationToken cancellationToken)
-    {
-        var rated = await inner.RateAsync(id, value, cancellationToken);
-        cache.Remove(id);
-        return rated;
     }
 
     // Lists and new sessions aren't cached: passed straight through.
@@ -588,6 +586,7 @@ builder.Services.AddScoped<IStudySessionService, CachedStudySessionService>();
 ```
 
 - `typeof(ICache<,>)` is an **open generic** registration: one line for every `ICache<TKey, TValue>` anyone asks for.
+- `ChangeThenForgetAsync<TResult>` is a **generic method**: it has its own type parameter, inferred from the lambda, and replaces three copies of the same `try`/`finally`. Together with `ICache<TKey, TValue>` that's the checklist's "generic type with a generic method that removes duplication".
 - **Singleton**, so all requests share one cache. That's exactly what makes it shared memory, and why it needs a thread-safe collection. (The decorator itself is scoped, like the service and the `DbContext` it uses.)
 
 ## 14. Test the Cache, Including Many Threads at Once
@@ -750,7 +749,7 @@ cd CoolApp.Api.Tests.XUnit
 dotnet stryker --test-runner mtp --project CoolApp.Api.csproj --mutate "**/Caching/*.cs" --mutate "**/Services/CachedStudySessionService.cs" --mutate "**/Dtos/*.cs"
 ```
 
-It takes about 20 seconds and opens nothing by itself: the HTML report is in `StrykerOutput/<date>/reports/` (add `StrykerOutput/` to `.gitignore`). On StudySpot the score is about 56%. The survivors are worth reading: removing `cache.Remove(id)` from `DeleteAsync` or `RateAsync` isn't noticed by any test (*NoCoverage*), and `StartsAt <= now` becoming `StartsAt < now` survives because no test sends a session that starts exactly now. Each survivor is a test you could write.
+It takes about 20 seconds and opens nothing by itself: the HTML report is in `StrykerOutput/<date>/reports/` (add `StrykerOutput/` to `.gitignore`). On StudySpot the score is about 63%. The survivors are worth reading: `StartsAt <= now` becoming `StartsAt < now` survives because no test sends a session that starts exactly now, the validation message can change without a test noticing, and so can the `string.Empty` defaults. Each survivor is either a test you could write or a mutant you decide isn't worth one. (Before `ChangeThenForgetAsync` existed, the `cache.Remove` in `DeleteAsync` and `RateAsync` showed up as *NoCoverage*: no test ran them at all.)
 
 ## The Same Tests in NUnit and MSTest
 
@@ -765,7 +764,7 @@ dotnet test --project CoolApp.Api.Tests.MSTest
 
 - **The build checks the standard**: `Directory.Build.props` with `AnalysisLevel`, `EnforceCodeStyleInBuild` and `TreatWarningsAsErrors`, and every rule you switch off has a comment saying why.
 - **No entity crosses the API boundary**: every action takes a request DTO and returns a response DTO, for every entity, not just one. The tests check that a field a client must not choose is ignored.
-- **Your generic type is used with a real type argument**, from real code, not only declared. A constraint (`where T : ...`) says what it needs from `T`.
+- **Your generic type and generic method are used with real type arguments**, from real code, and you can show the duplication they removed. A constraint (`where T : ...`) says what the code needs from `T`.
 - **Your shared memory is really shared** (a singleton, a static field, or something parallel threads touch), and it's protected by a concurrent collection or a `lock` - with a test that uses it from many threads at once.
 - **Think about invalidation**: every change goes through a path that removes the cached value.
 

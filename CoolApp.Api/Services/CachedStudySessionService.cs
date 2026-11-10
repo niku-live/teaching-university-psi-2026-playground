@@ -17,31 +17,29 @@ public class CachedStudySessionService(StudySessionService inner, ICache<int, St
     public Task<StudySession?> GetByIdAsync(int id, CancellationToken cancellationToken) =>
         cache.GetOrAddAsync(id, inner.GetByIdAsync, cancellationToken);
 
-    public async Task<bool> UpdateAsync(int id, StudySession session, CancellationToken cancellationToken)
+    public Task<bool> UpdateAsync(int id, StudySession session, CancellationToken cancellationToken) =>
+        ChangeThenForgetAsync(id, () => inner.UpdateAsync(id, session, cancellationToken));
+
+    public Task<bool> DeleteAsync(int id, CancellationToken cancellationToken) =>
+        ChangeThenForgetAsync(id, () => inner.DeleteAsync(id, cancellationToken));
+
+    public Task<bool> RateAsync(int id, int value, CancellationToken cancellationToken) =>
+        ChangeThenForgetAsync(id, () => inner.RateAsync(id, value, cancellationToken));
+
+    // A generic method: runs any change, whatever type it returns, and then removes the session
+    // from the cache - also when the change throws (after a 409 conflict someone else has changed
+    // the session, so the cached copy is old). One copy of this try/finally instead of one per
+    // change; TResult is inferred from the lambda, so the callers never write it.
+    private async Task<TResult> ChangeThenForgetAsync<TResult>(int id, Func<Task<TResult>> change)
     {
         try
         {
-            return await inner.UpdateAsync(id, session, cancellationToken);
+            return await change();
         }
         finally
         {
-            // Also after a 409 conflict: someone else changed the session, so the cached copy is old.
             cache.Remove(id);
         }
-    }
-
-    public async Task<bool> DeleteAsync(int id, CancellationToken cancellationToken)
-    {
-        var deleted = await inner.DeleteAsync(id, cancellationToken);
-        cache.Remove(id);
-        return deleted;
-    }
-
-    public async Task<bool> RateAsync(int id, int value, CancellationToken cancellationToken)
-    {
-        var rated = await inner.RateAsync(id, value, cancellationToken);
-        cache.Remove(id);
-        return rated;
     }
 
     // Lists and new sessions aren't cached: passed straight through.
