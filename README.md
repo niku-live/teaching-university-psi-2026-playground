@@ -95,7 +95,9 @@ npm run build
 | `CoolApp.Api/Program.cs` | Configures the ASP.NET Core application and HTTP pipeline |
 | `CoolApp.Api/Models/` | Backend domain models |
 | `CoolApp.Api/Controllers/` | Backend API controllers - HTTP in, HTTP out, no business rules |
-| `CoolApp.Api/Services/` | `IStudySessionService` and `StudySessionService`: the app's rules (filtering, ordering, ratings) |
+| `CoolApp.Api/Dtos/` | The API contract (Lecture 10): `StudySessionDto` (responses), `CreateStudySessionDto`/`UpdateStudySessionDto` (requests) and the mappings to and from the entity |
+| `CoolApp.Api/Services/` | `IStudySessionService` and `StudySessionService`: the app's rules (filtering, ordering, ratings); `CachedStudySessionService` caches sessions by id around it |
+| `CoolApp.Api/Caching/` | The generic `ICache<TKey, TValue>` and its thread-safe `InMemoryCache<TKey, TValue>` on a `ConcurrentDictionary` (Lecture 10) |
 | `CoolApp.Api/Repositories/` | `IStudySessionRepository` and its two implementations: `EfStudySessionRepository` (the app, SQLite via Entity Framework Core) and `InMemoryStudySessionRepository` (the unit tests) |
 | `CoolApp.Api/Data/` | `StudySpotDbContext`: the Entity Framework model, its configuration and the sample data |
 | `CoolApp.Api/Migrations/` | Entity Framework migrations, generated with `dotnet ef migrations add` and applied on startup in Development |
@@ -104,6 +106,7 @@ npm run build
 | `CoolApp.Api.Tests.NUnit/`, `CoolApp.Api.Tests.MSTest/` | The same tests written with NUnit and with MSTest, to compare the three frameworks side by side. They are not in `CoolApp.sln`, so run them by name: `dotnet test --project CoolApp.Api.Tests.NUnit` |
 | `CoolApp.Client/tests/` | Jest + React Testing Library tests for the React app, kept out of `src/` - run with `npm test` (or `npm run test:coverage`) in `CoolApp.Client/` |
 | `global.json` | Selects Microsoft.Testing.Platform as the `dotnet test` runner |
+| `Directory.Build.props`, `.editorconfig` | The coding standard every .NET project gets, checked by the build: analyzers, style rules, and the exceptions with their reasons (Lecture 10) |
 | `dotnet-tools.json` | Local .NET tools (ReportGenerator for coverage reports, `dotnet ef` for migrations) - run `dotnet tool restore` once after cloning |
 | `CoolApp.Api/Pages/` | Server-rendered error page support |
 | `CoolApp.Client/` | The React app (its own `package.json`), next to the API rather than inside it |
@@ -145,5 +148,9 @@ npm run build
 - Async all the way down: controller actions, the service and the repository are `async`, and each request's `CancellationToken` is passed to the repository, which stops work for a cancelled request
 - Sessions are stored in SQLite with Entity Framework Core (`StudySpotDbContext`, `EfStudySessionRepository`), with migrations applied and sample data seeded on startup in Development - swapped in behind `IStudySessionRepository` with one line in `Program.cs` (see WALKTHROUGH-09)
 - Optimistic concurrency: every session has a `Version`; a `PUT` with an outdated version throws our own `StudySessionConflictException`, which `StudySessionConflictExceptionHandler` (an `IExceptionHandler`) turns into a `409 Conflict` problem details response instead of silently overwriting someone else's change
+- The coding standard is checked by the build: `Directory.Build.props` (recommended analyzers, style rules enforced in the build, warnings as errors) and `.editorconfig` (style rules, complexity rules, and every exception with its reason) - see WALKTHROUGH-10
+- Request and response DTOs (`CoolApp.Api/Dtos/`): the controller takes `CreateStudySessionDto`/`UpdateStudySessionDto` and returns `StudySessionDto`, so the EF entity is no longer the API contract and a client can't over-post fields like `version`
+- A generic `ICache<TKey, TValue>` with a thread-safe `InMemoryCache<TKey, TValue>` on a `ConcurrentDictionary`, registered once as an open generic singleton and shared by every request through `CachedStudySessionService`, a decorator around the service whose generic `ChangeThenForgetAsync<TResult>` method invalidates the cache after every change
+- Optional mutation testing with Stryker.NET (`dotnet stryker`, a local tool)
 
 The repository will change throughout the semester. Use Git history to compare lecture stages and understand why each change was introduced.

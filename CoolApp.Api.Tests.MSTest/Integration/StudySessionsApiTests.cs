@@ -1,6 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
-using CoolApp.Models;
+using CoolApp.Dtos;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CoolApp.Api.Tests.MSTest.Integration;
@@ -37,8 +37,33 @@ public class StudySessionsApiTests(TestContext testContext)
         var response = await _client.PostAsJsonAsync("/api/studysessions", ValidSession("Integration testing"), Cancellation);
 
         Assert.AreEqual(HttpStatusCode.Created, response.StatusCode);
-        var created = await _client.GetFromJsonAsync<StudySession>(response.Headers.Location, Cancellation);
+        var created = await _client.GetFromJsonAsync<StudySessionDto>(response.Headers.Location, Cancellation);
         Assert.AreEqual("Integration testing", created!.Topic);
+    }
+
+    // Over-posting: the request contract (CreateStudySessionDto) has no id or version, so a
+    // client that sends them anyway can't choose them. Before the DTOs, this session was
+    // stored with version 50.
+    [TestMethod]
+    public async Task Create_WithIdAndVersion_IgnoresThem()
+    {
+        var session = new
+        {
+            id = 999,
+            version = 50,
+            course = "Software Development I",
+            topic = "Over-posting",
+            location = "MIF, room 401",
+            startsAt = DateTimeOffset.UtcNow.AddDays(7),
+            hostName = "Ieva",
+            seatsAvailable = 4
+        };
+
+        var response = await _client.PostAsJsonAsync("/api/studysessions", session, Cancellation);
+
+        Assert.AreEqual(HttpStatusCode.Created, response.StatusCode);
+        var created = await response.Content.ReadFromJsonAsync<StudySessionDto>(Cancellation);
+        Assert.AreEqual(0, created!.Version);
     }
 
     [TestMethod]
@@ -81,10 +106,9 @@ public class StudySessionsApiTests(TestContext testContext)
     public async Task Update_WithTheVersionJustRead_Returns204()
     {
         var created = await _client.PostAsJsonAsync("/api/studysessions", ValidSession("Fresh edit"), Cancellation);
-        var session = await _client.GetFromJsonAsync<StudySession>(created.Headers.Location, Cancellation);
+        var session = await _client.GetFromJsonAsync<StudySessionDto>(created.Headers.Location, Cancellation);
 
-        session!.SeatsAvailable = 2;
-        var response = await _client.PutAsJsonAsync(created.Headers.Location, session, Cancellation);
+        var response = await _client.PutAsJsonAsync(created.Headers.Location, session! with { SeatsAvailable = 2 }, Cancellation);
 
         Assert.AreEqual(HttpStatusCode.NoContent, response.StatusCode);
     }
@@ -93,13 +117,11 @@ public class StudySessionsApiTests(TestContext testContext)
     public async Task Update_WithAVersionSomeoneElseAlreadyChanged_Returns409Problem()
     {
         var created = await _client.PostAsJsonAsync("/api/studysessions", ValidSession("Two editors"), Cancellation);
-        var first = await _client.GetFromJsonAsync<StudySession>(created.Headers.Location, Cancellation);
-        var second = await _client.GetFromJsonAsync<StudySession>(created.Headers.Location, Cancellation);
+        var first = await _client.GetFromJsonAsync<StudySessionDto>(created.Headers.Location, Cancellation);
+        var second = await _client.GetFromJsonAsync<StudySessionDto>(created.Headers.Location, Cancellation);
 
-        first!.SeatsAvailable = 2;
-        await _client.PutAsJsonAsync(created.Headers.Location, first, Cancellation);
-        second!.Location = "Library, 2nd floor";
-        var response = await _client.PutAsJsonAsync(created.Headers.Location, second, Cancellation);
+        await _client.PutAsJsonAsync(created.Headers.Location, first! with { SeatsAvailable = 2 }, Cancellation);
+        var response = await _client.PutAsJsonAsync(created.Headers.Location, second! with { Location = "Library, 2nd floor" }, Cancellation);
 
         Assert.AreEqual(HttpStatusCode.Conflict, response.StatusCode);
         Assert.AreEqual("application/problem+json", response.Content.Headers.ContentType?.MediaType);

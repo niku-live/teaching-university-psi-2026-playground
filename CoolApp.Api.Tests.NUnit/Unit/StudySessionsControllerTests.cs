@@ -1,4 +1,5 @@
 using CoolApp.Controllers;
+using CoolApp.Dtos;
 using CoolApp.Models;
 using CoolApp.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -33,6 +34,16 @@ public class StudySessionsControllerTests
         SeatsAvailable = 4
     };
 
+    private static CreateStudySessionDto NewSession() => new()
+    {
+        Course = "Software Development I",
+        Topic = "Controller tests",
+        Location = "MIF, room 401",
+        StartsAt = new DateTimeOffset(2030, 1, 1, 10, 0, 0, TimeSpan.Zero),
+        HostName = "Ieva",
+        SeatsAvailable = 4
+    };
+
     [Test]
     public async Task GetById_ServiceFindsTheSession_ReturnsIt()
     {
@@ -41,7 +52,8 @@ public class StudySessionsControllerTests
 
         var result = await _controller.GetById(7, Cancellation);
 
-        Assert.That(result.Value, Is.SameAs(session));
+        // StudySessionDto is a record: two DTOs with the same values are equal.
+        Assert.That(result.Value, Is.EqualTo(session.ToDto()));
     }
 
     [Test]
@@ -60,7 +72,7 @@ public class StudySessionsControllerTests
         var created = Session(42);
         _service.CreateAsync(Arg.Any<StudySession>(), Arg.Any<CancellationToken>()).Returns(created);
 
-        var result = await _controller.Create(Session(0), Cancellation);
+        var result = await _controller.Create(NewSession(), Cancellation);
 
         var createdAt = result.Result as CreatedAtActionResult;
         Assert.That(createdAt, Is.Not.Null);
@@ -68,7 +80,7 @@ public class StudySessionsControllerTests
         {
             Assert.That(createdAt!.ActionName, Is.EqualTo(nameof(StudySessionsController.GetById)));
             Assert.That(createdAt.RouteValues!["id"], Is.EqualTo(42));
-            Assert.That(createdAt.Value, Is.SameAs(created));
+            Assert.That(createdAt.Value, Is.EqualTo(created.ToDto()));
         });
     }
 

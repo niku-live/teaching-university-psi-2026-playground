@@ -1,3 +1,4 @@
+using CoolApp.Caching;
 using CoolApp.Data;
 using CoolApp.ExceptionHandling;
 using CoolApp.Repositories;
@@ -32,7 +33,16 @@ builder.Services.AddDbContext<StudySpotDbContext>((services, options) =>
         services.GetRequiredService<IConfiguration>().GetConnectionString("StudySpot")
             ?? throw new InvalidOperationException("Connection string 'StudySpot' is missing")));
 builder.Services.AddScoped<IStudySessionRepository, EfStudySessionRepository>();
-builder.Services.AddScoped<IStudySessionService, StudySessionService>();
+
+// The generic cache, registered once for every type argument (an "open generic"): whoever
+// asks for ICache<int, StudySession?> - or any other ICache<TKey, TValue> - gets an
+// InMemoryCache<int, StudySession?>. A singleton, so every request shares the same one.
+builder.Services.AddSingleton(typeof(ICache<,>), typeof(InMemoryCache<,>));
+
+// The controller asks for IStudySessionService and gets the caching decorator, which wraps
+// the real StudySessionService (registered as itself, so the decorator can ask for it).
+builder.Services.AddScoped<StudySessionService>();
+builder.Services.AddScoped<IStudySessionService, CachedStudySessionService>();
 
 // Errors as RFC 9457 "problem details" JSON. Exceptions that reach UseExceptionHandler
 // (below) go through the registered IExceptionHandlers in order; one that no handler

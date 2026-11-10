@@ -722,7 +722,7 @@ The theory lecture's demo uses PostgreSQL in Docker. If your team prefers that, 
 
 ## Next Steps
 
-Update `ROADMAP.md` (the Beta items for Entity Framework and the custom exception are done) and `README.md`'s "Project Map" and "Current Examples". Left for Lecture 10:
+Update `ROADMAP.md` (the Beta items for Entity Framework and the custom exception are done) and `README.md`'s "Project Map" and "Current Examples". Continue with [WALKTHROUGH-10.md](WALKTHROUGH-10.md), which covers DTOs, a generic type and the shared memory scenario. Left for Lecture 10:
 
 - A **generic** type with a generic method, now that there's a real reason for one (the theory lecture on generics).
 - Lab Assignment #2's **shared memory** scenario, with concurrent collections or a lock: the database removed StudySpot's shared `List`, so it needs a new one, such as an in-memory cache or a counter of active requests.
