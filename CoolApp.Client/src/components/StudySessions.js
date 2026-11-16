@@ -274,7 +274,13 @@ export class StudySessions extends Component {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
-    });
+    }).catch(() => null); // UX fix 2: fetch rejects only when no answer came back at all (offline, server down)
+
+    // UX fix 2: before, this case threw, nothing caught it, and the button said "Creating..." forever.
+    if (!response) {
+      this.setState({ submitting: false, error: 'Could not reach the server. Your answers are kept, so check your connection and try again.' });
+      return;
+    }
 
     if (!response.ok) {
       if (response.status === 400) {
