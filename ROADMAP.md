@@ -28,13 +28,15 @@ Features:
 
 Requirement coverage still needed:
 - [x] Persist sessions in a database with Entity Framework, instead of the in-memory list (Lecture 09: SQLite, `StudySpotDbContext` + `EfStudySessionRepository` behind the existing `IStudySessionRepository`, migrations, integration tests against their own database)
-- [ ] Request/response DTOs (e.g. `CreateStudySessionDto`/`StudySessionDto`) separating the API contract from the EF entity - moved to Lecture 10, now that there's a real entity (with tracking/navigation properties) worth not leaking over the wire; `StudySessionSummary` (Lecture 04) is a lightweight preview of the same idea
-- [ ] A generic type/method (e.g. a generic `Repository<T>` used for `StudySession` and one other entity)
+- [x] Request/response DTOs separating the API contract from the EF entity (Lecture 10: `StudySessionDto` out, `CreateStudySessionDto`/`UpdateStudySessionDto` in, mapped in the controller - a client can no longer over-post `version`; `StudySessionSummary` from Lecture 04 was the first small one)
+- [x] A generic type/method (Lecture 10: `ICache<TKey, TValue>`/`InMemoryCache<TKey, TValue>` with a `notnull` constraint, registered once as an open generic and used as `ICache<int, StudySession?>`, plus the generic method `CachedStudySessionService.ChangeThenForgetAsync<TResult>` replacing three copies of the same invalidation code)
 - [x] A custom exception type, thrown and handled meaningfully (Lecture 09: `StudySessionConflictException` when an edit is based on an outdated `Version`, turned into a `409 Conflict` for every endpoint by an `IExceptionHandler`; a `SessionFullException` can follow once RSVP exists)
-- [ ] A shared memory scenario handled with a concurrent collection or a lock (planned for Lecture 10: the database removed the shared in-memory `List`, so this needs a new one, e.g. a cache)
+- [x] A shared memory scenario handled with a concurrent collection or a lock (Lecture 10: the singleton `InMemoryCache` on a `ConcurrentDictionary`, shared by every request through `CachedStudySessionService`, with a test that hits it from 100 threads at once)
 - [x] `async`/`await` for all I/O (database calls, no synchronous DB access) (Lecture 08 made the repository, service and controller async with the request's `CancellationToken`; Lecture 09's Entity Framework repository uses only the async EF methods and passes the token to every query)
 - [x] Dependency Injection used for the repository/service layer instead of `new`-ing dependencies (landed early in Lecture 06: `IStudySessionService`/`StudySessionService` + `IStudySessionRepository`, backed by an in-memory implementation until Entity Framework arrives)
 - [x] Unit and integration test coverage of at least 50% (Lecture 08: `CoolApp.Api.Tests.XUnit` with xUnit v3 unit tests, controller tests with NSubstitute and `WebApplicationFactory` integration tests - about 80% line coverage of the backend, generated code excluded - plus Jest + React Testing Library tests for the session form, about 63% of the React code; about 71% combined)
+
+Also from Lecture 10 (theory 09, software construction): `Directory.Build.props` turns on the recommended .NET analyzers and the `.editorconfig` style rules for every project, and warnings fail the build. Still open for Beta: end-to-end tests with Playwright.
 
 ## Final - matches Lab Assignment #3 (lectures 11-14)
 

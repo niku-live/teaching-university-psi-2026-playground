@@ -44,6 +44,21 @@ Content-Type: application/json
   "seatsAvailable": 0
 }
 
+### Over-posting: try to choose the version yourself (since Lecture 10 the "version" in the response is 0)
+# Before the DTOs the API bound the StudySession entity, and stored "version": 50 as sent.
+POST {{HostAddress}}/api/studysessions
+Content-Type: application/json
+
+{
+  "version": 50,
+  "course": "Software Development I",
+  "topic": "Over-posting",
+  "location": "MIF, room 401",
+  "startsAt": "2027-09-23T18:00:00Z",
+  "hostName": "You",
+  "seatsAvailable": 4
+}
+
 ### Read a session before editing it - note its "version"
 # @name sessionToEdit
 GET {{HostAddress}}/api/studysessions/1
