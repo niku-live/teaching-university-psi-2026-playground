@@ -58,6 +58,15 @@ export class StudySessions extends Component {
     return errors;
   }
 
+  // UX fix 5: feedback where the eyes already are. After a failed submit the user looks
+  // at the button; the cursor goes to the first field that needs fixing (in form order).
+  static focusFirstInvalidField(errors) {
+    const firstInvalid = Object.keys(emptyForm).find(name => errors[name]);
+    if (firstInvalid) {
+      document.getElementById(firstInvalid)?.focus();
+    }
+  }
+
   // Maps ASP.NET's ValidationProblemDetails ("errors": { "PropertyName": ["message"] })
   // to the same shape as validate() above, so both can drive the same error display.
   static mapServerErrors(problemDetails) {
@@ -69,6 +78,21 @@ export class StudySessions extends Component {
       }
     }
     return errors;
+  }
+
+  // UX fix 3: one message per cause. "Please try again" cannot help with every failure,
+  // so say what happened, what it means for the user, and what to do next.
+  static describeCreateFailure(status) {
+    if (status === 409) {
+      return 'Someone changed the same data at the same time. Reload the list and try again.';
+    }
+    if (status === 429 || status === 503) {
+      return 'The server is busy right now. Your answers are kept, so try again in a minute.';
+    }
+    if (status >= 500) {
+      return 'Something went wrong on our side, not in your answers. They are kept, so try again later.';
+    }
+    return `The server could not accept this request (HTTP ${status}). Reload the page and try again.`;
   }
 
   // Mirrors GetAll's own three query parameters exactly - course, minSeatsAvailable,
@@ -95,7 +119,7 @@ export class StudySessions extends Component {
     return query ? `?${query}` : '';
   }
 
-  static renderSessionsTable(sessions, onRate) {
+  static renderSessionsTable(sessions, onRate, highlightId) {
     return (
       <table className="table table-striped" aria-labelledby="tableLabel">
         <thead>
@@ -112,7 +136,7 @@ export class StudySessions extends Component {
         </thead>
         <tbody>
           {sessions.map(session =>
-            <tr key={session.id}>
+            <tr key={session.id} className={session.id === highlightId ? 'table-success' : undefined}>
               <td>{session.course}</td>
               <td>{session.topic}</td>
               <td>{session.location}</td>
@@ -164,8 +188,16 @@ export class StudySessions extends Component {
 
   render() {
     let contents = this.state.loading
-      ? <p><em>Loading...</em></p>
-      : StudySessions.renderSessionsTable(this.state.sessions, this.rateSession);
+      // UX fix 1: "Still loading..." after 1 s, and a failure that says so, with a way out.
+      ? <p><em>{this.state.slow ? 'Still loading...' : 'Loading...'}</em></p>
+      : this.state.loadError
+        ? (
+          <div className="alert alert-danger" role="alert">
+            {this.state.loadError}{' '}
+            <button className="btn btn-link p-0 align-baseline" type="button" onClick={() => this.retryLoading()}>Try again</button>
+          </div>
+        )
+      : StudySessions.renderSessionsTable(this.state.sessions, this.rateSession, this.state.created?.id);
 
     return (
       <div>
@@ -216,8 +248,21 @@ export class StudySessions extends Component {
           </div>
         </form>
 
+        {/* UX fix 4: a failed rating is reported where the list is, not silently ignored. */}
+        {this.state.ratingMessage && <div className="alert alert-warning" role="alert">{this.state.ratingMessage}</div>}
         <div className="study-sessions-table">
           {contents}
+          {/* UX fix 7: an empty result says why it is empty, and offers the next step. */}
+          {!this.state.loading && !this.state.loadError && this.state.sessions.length === 0 && (
+            Object.values(this.state.filters).some(value => value !== '')
+              ? (
+                <p>
+                  No study sessions match these filters.{' '}
+                  <button className="btn btn-link p-0 align-baseline" type="button" onClick={this.handleFilterClear}>Clear filters</button>
+                </p>
+              )
+              : <p>No study sessions yet. Host the first one below.</p>
+          )}
         </div>
 
         <h2>Host a new study session</h2>
@@ -233,6 +278,12 @@ export class StudySessions extends Component {
             {this.state.submitting ? 'Creating...' : 'Create session'}
           </button>
         </form>
+        {/* UX fix 6: the end of the task is designed too - what happened, and where to look. */}
+        {this.state.created && (
+          <p className="text-success" role="status">
+            Session "{this.state.created.topic}" created. It is highlighted in the list above.
+          </p>
+        )}
       </div>
     );
   }
@@ -249,11 +300,11 @@ export class StudySessions extends Component {
 
     const fieldErrors = StudySessions.validate(this.state.form);
     if (Object.keys(fieldErrors).length > 0) {
-      this.setState({ fieldErrors, error: null });
+      this.setState({ fieldErrors, error: null }, () => StudySessions.focusFirstInvalidField(fieldErrors));
       return;
     }
 
-    this.setState({ submitting: true, error: null, fieldErrors: {} });
+    this.setState({ submitting: true, error: null, fieldErrors: {}, created: null });
 
     // The <input type="datetime-local"> value has no timezone info - it's just
     // "2026-10-24T18:00" in whatever timezone the browser happens to be in. Converting
@@ -266,20 +317,31 @@ export class StudySessions extends Component {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
-    });
+    }).catch(() => null); // UX fix 2: fetch rejects only when no answer came back at all (offline, server down)
+
+    // UX fix 2: before, this case threw, nothing caught it, and the button said "Creating..." forever.
+    if (!response) {
+      this.setState({ submitting: false, error: 'Could not reach the server. Your answers are kept, so check your connection and try again.' });
+      return;
+    }
 
     if (!response.ok) {
       if (response.status === 400) {
         const problemDetails = await response.json();
-        this.setState({ submitting: false, fieldErrors: StudySessions.mapServerErrors(problemDetails) });
+        const serverErrors = StudySessions.mapServerErrors(problemDetails);
+        this.setState({ submitting: false, fieldErrors: serverErrors }, () => StudySessions.focusFirstInvalidField(serverErrors));
       } else {
-        this.setState({ submitting: false, error: 'Could not create the study session. Please try again.' });
+        this.setState({ submitting: false, error: StudySessions.describeCreateFailure(response.status) });
       }
       return;
     }
 
-    this.setState({ form: { ...emptyForm }, submitting: false, fieldErrors: {} });
+    // UX fix 6: before, a successful create only emptied the form - did it work?
+    const created = await response.json();
+    this.setState({ form: { ...emptyForm }, submitting: false, fieldErrors: {}, created });
     await this.populateStudySessions();
+    // Ready for the next session: the cursor goes back to the first field.
+    document.getElementById('course')?.focus();
   }
 
   // Accepts filters explicitly rather than always reading this.state.filters, so
@@ -287,9 +349,28 @@ export class StudySessions extends Component {
   // setState's own async update.
   async populateStudySessions(filters = this.state.filters) {
     const query = StudySessions.buildSessionsQuery(filters);
-    const response = await fetch(`api/studysessions${query}`);
-    const data = await response.json();
-    this.setState({ sessions: data, loading: false });
+    // UX fix 1: a request has four states - waiting, slow (over 1 s), failed and done.
+    // Before, only "waiting" and "done" existed: a failed request left "Loading..." on screen forever.
+    const slowTimer = setTimeout(() => this.setState({ slow: true }), 1000);
+    try {
+      const response = await fetch(`api/studysessions${query}`);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      const data = await response.json();
+      this.setState({ sessions: data, loading: false, loadError: null });
+    } catch {
+      this.setState({ loading: false, loadError: 'Could not load the study sessions. Check your connection and try again.' });
+    } finally {
+      clearTimeout(slowTimer);
+      this.setState({ slow: false });
+    }
+  }
+
+  // UX fix 1: the way out of a failed load.
+  async retryLoading() {
+    this.setState({ loading: true, loadError: null });
+    await this.populateStudySessions();
   }
 
   handleFilterChange(event) {
@@ -325,10 +406,17 @@ export class StudySessions extends Component {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ value: Number(value) })
-    });
+    }).catch(() => null); // UX fix 4: no answer at all - offline, or the server is down
 
-    if (response.ok) {
+    // UX fix 4: before, a failed rating did nothing at all, while the select kept showing the new value.
+    if (response && response.ok) {
+      this.setState({ ratingMessage: null });
       await this.populateStudySessions();
+    } else if (response && response.status === 404) {
+      this.setState({ ratingMessage: 'That session no longer exists, so it was not rated. The list has been refreshed.' });
+      await this.populateStudySessions();
+    } else {
+      this.setState({ ratingMessage: 'The rating was not saved. Check your connection and pick it again.' });
     }
   }
 }

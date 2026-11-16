@@ -125,6 +125,7 @@ npm run build
 - A full CRUD ASP.NET Core API for study sessions (`GET`/`POST`/`PUT`/`DELETE /api/studysessions`)
 - Server-side validation on the `StudySession` model (`DataAnnotations` + a custom `IValidatableObject` check), enforced automatically by `[ApiController]` model binding - invalid data gets a `400 Bad Request` with details, without any manual checks in the controller
 - Client-side validation on the "Host a new study session" form, with the same errors shown whether they come from the browser or the API
+- A sessions page designed for the moments things go wrong (Lecture 11, UI/UX): "Still loading..." after 1 s, a failed load with "Try again", no silent failures when offline or when a rating fails, one error message per cause, focus on the first field to fix, a confirmed and highlighted new session, and an empty list that offers the next step - each with its own test in `CoolApp.Client/tests/ux/`
 - Interactive API documentation via Swagger UI (`/swagger`, Development environment only)
 - A React form for creating a study session from the UI, not just the API
 - `CoolApp.http` - ready-made REST Client requests exercising the full CRUD API (`GET`/`POST`/`PUT`/`DELETE`), including an invalid request to see the validation error shape
