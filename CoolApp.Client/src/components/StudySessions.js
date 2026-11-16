@@ -164,7 +164,15 @@ export class StudySessions extends Component {
 
   render() {
     let contents = this.state.loading
-      ? <p><em>Loading...</em></p>
+      // UX fix 1: "Still loading..." after 1 s, and a failure that says so, with a way out.
+      ? <p><em>{this.state.slow ? 'Still loading...' : 'Loading...'}</em></p>
+      : this.state.loadError
+        ? (
+          <div className="alert alert-danger" role="alert">
+            {this.state.loadError}{' '}
+            <button className="btn btn-link p-0 align-baseline" type="button" onClick={() => this.retryLoading()}>Try again</button>
+          </div>
+        )
       : StudySessions.renderSessionsTable(this.state.sessions, this.rateSession);
 
     return (
@@ -287,9 +295,28 @@ export class StudySessions extends Component {
   // setState's own async update.
   async populateStudySessions(filters = this.state.filters) {
     const query = StudySessions.buildSessionsQuery(filters);
-    const response = await fetch(`api/studysessions${query}`);
-    const data = await response.json();
-    this.setState({ sessions: data, loading: false });
+    // UX fix 1: a request has four states - waiting, slow (over 1 s), failed and done.
+    // Before, only "waiting" and "done" existed: a failed request left "Loading..." on screen forever.
+    const slowTimer = setTimeout(() => this.setState({ slow: true }), 1000);
+    try {
+      const response = await fetch(`api/studysessions${query}`);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      const data = await response.json();
+      this.setState({ sessions: data, loading: false, loadError: null });
+    } catch {
+      this.setState({ loading: false, loadError: 'Could not load the study sessions. Check your connection and try again.' });
+    } finally {
+      clearTimeout(slowTimer);
+      this.setState({ slow: false });
+    }
+  }
+
+  // UX fix 1: the way out of a failed load.
+  async retryLoading() {
+    this.setState({ loading: true, loadError: null });
+    await this.populateStudySessions();
   }
 
   handleFilterChange(event) {
