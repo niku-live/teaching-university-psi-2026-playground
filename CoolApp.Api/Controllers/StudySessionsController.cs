@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using CoolApp.Dtos;
 using CoolApp.Models;
 using CoolApp.Services;
 
@@ -6,6 +7,10 @@ namespace CoolApp.Controllers;
 
 // Only translates HTTP to and from IStudySessionService calls: routing, model binding,
 // status codes. Everything about what the app actually *does* lives in the service.
+//
+// The HTTP contract is the DTOs (CoolApp.Dtos): requests bind to CreateStudySessionDto /
+// UpdateStudySessionDto and responses are StudySessionDto. The service and repository keep
+// working with the StudySession entity; the mapping happens here, at the edge.
 //
 // Every action is async and takes a CancellationToken. ASP.NET Core fills that parameter
 // in by itself (it's HttpContext.RequestAborted): it is cancelled when the client closes
@@ -20,12 +25,15 @@ namespace CoolApp.Controllers;
 public class StudySessionsController(IStudySessionService service) : ControllerBase
 {
     [HttpGet]
-    public Task<IEnumerable<StudySession>> GetAll(
+    public async Task<IEnumerable<StudySessionDto>> GetAll(
         CancellationToken cancellationToken,
         [FromQuery] string? course = null,
         [FromQuery] int? minSeatsAvailable = null,
-        [FromQuery] DateTimeOffset? asOf = null) =>
-        service.GetUpcomingAsync(course, minSeatsAvailable, asOf, cancellationToken);
+        [FromQuery] DateTimeOffset? asOf = null)
+    {
+        var sessions = await service.GetUpcomingAsync(course, minSeatsAvailable, asOf, cancellationToken);
+        return sessions.Select(session => session.ToDto());
+    }
 
     [HttpGet("summary")]
     public Task<IEnumerable<StudySessionSummary>> GetSummaries(
@@ -34,22 +42,22 @@ public class StudySessionsController(IStudySessionService service) : ControllerB
         service.GetSummariesAsync(minSeatsAvailable, cancellationToken);
 
     [HttpGet("{id:int}")]
-    public async Task<ActionResult<StudySession>> GetById(int id, CancellationToken cancellationToken)
+    public async Task<ActionResult<StudySessionDto>> GetById(int id, CancellationToken cancellationToken)
     {
         var session = await service.GetByIdAsync(id, cancellationToken);
-        return session is null ? NotFound() : session;
+        return session is null ? NotFound() : session.ToDto();
     }
 
     [HttpPost]
-    public async Task<ActionResult<StudySession>> Create(StudySession session, CancellationToken cancellationToken)
+    public async Task<ActionResult<StudySessionDto>> Create(CreateStudySessionDto session, CancellationToken cancellationToken)
     {
-        var created = await service.CreateAsync(session, cancellationToken);
-        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+        var created = await service.CreateAsync(session.ToEntity(), cancellationToken);
+        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created.ToDto());
     }
 
     [HttpPut("{id:int}")]
-    public async Task<IActionResult> Update(int id, StudySession session, CancellationToken cancellationToken) =>
-        await service.UpdateAsync(id, session, cancellationToken) ? NoContent() : NotFound();
+    public async Task<IActionResult> Update(int id, UpdateStudySessionDto session, CancellationToken cancellationToken) =>
+        await service.UpdateAsync(id, session.ToEntity(), cancellationToken) ? NoContent() : NotFound();
 
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken) =>

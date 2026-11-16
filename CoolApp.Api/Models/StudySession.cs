@@ -1,9 +1,11 @@
 using System.ComponentModel.DataAnnotations;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace CoolApp.Models;
 
-public class StudySession : IValidatableObject, IComparable<StudySession>
+// The entity: what the database stores (Entity Framework reads the [Required]/[StringLength]
+// attributes for the table's columns). Since Lecture 10 the API no longer binds or returns it
+// directly - clients send CreateStudySessionDto/UpdateStudySessionDto and get StudySessionDto back.
+public class StudySession : IComparable<StudySession>
 {
     public int Id { get; set; }
 
@@ -32,10 +34,8 @@ public class StudySession : IValidatableObject, IComparable<StudySession>
     // until someone rates it), but because Rating's own constructor would throw if
     // asked to represent "no rating" as some sentinel int (e.g. 0) instead.
     //
-    // [BindNever] keeps this out of Create/Update's model binding entirely - it's
-    // only ever set server-side, via RateSession's already-validated RatingSubmission,
-    // not by a client just including "hostRating" in a POST/PUT body.
-    [BindNever]
+    // Only ever set server-side, via RateSession's already-validated RatingSubmission:
+    // the create/update DTOs have no HostRating for a client to fill in.
     public Rating? HostRating { get; set; }
 
     // Optimistic concurrency: [ConcurrencyCheck] makes EF add the version it read to the
@@ -76,15 +76,5 @@ public class StudySession : IValidatableObject, IComparable<StudySession>
         }
 
         return 0;
-    }
-
-    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
-    {
-        if (StartsAt <= DateTimeOffset.UtcNow)
-        {
-            yield return new ValidationResult(
-                "Starts at must be in the future.",
-                new[] { nameof(StartsAt) });
-        }
     }
 }

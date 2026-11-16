@@ -11,6 +11,8 @@ Step-by-step, copy-pasteable instructions for turning your own team's project in
 
 - [WALKTHROUGH-09.md](WALKTHROUGH-09.md) - A Real Database with Entity Framework Core, then Concurrency Conflicts and a Custom Exception (Lecture 09, optional home review): store sessions in SQLite through a `DbContext` and a second implementation of the repository interface, create and apply migrations, run the integration tests against their own database - then add a version to every session so a conflicting edit throws a custom `StudySessionConflictException`, handled once for the whole API by an `IExceptionHandler` that returns `409 Conflict`.
 
+- [WALKTHROUGH-10.md](WALKTHROUGH-10.md) - Code Quality Checked by the Build, then DTOs, a Generic Cache and Shared Memory (Lecture 10): turn on the .NET analyzers and `.editorconfig` style rules for every project with `Directory.Build.props`, fix or justify what they find and make warnings fail the build - then put request/response DTOs at the API's edge, and add a generic `InMemoryCache<TKey, TValue>` on a `ConcurrentDictionary` shared by every request through a caching decorator. Optionally, mutation testing with Stryker.NET.
+
 From Lecture 08 on, the API lives in `CoolApp.Api/` and the React app in `CoolApp.Client/`, with the test projects next to them; earlier walkthroughs describe paths from before that split, when the project sat at the repository root and the React app in `ClientApp/`.
 
 These are separate from [README.md](README.md) and [ROADMAP.md](ROADMAP.md), which describe *this* repository's own product decisions (StudySpot) - the walkthroughs are reusable instructions meant for **your own team's project**, without the StudySpot theming.
