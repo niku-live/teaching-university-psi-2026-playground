@@ -58,6 +58,15 @@ export class StudySessions extends Component {
     return errors;
   }
 
+  // UX fix 5: feedback where the eyes already are. After a failed submit the user looks
+  // at the button; the cursor goes to the first field that needs fixing (in form order).
+  static focusFirstInvalidField(errors) {
+    const firstInvalid = Object.keys(emptyForm).find(name => errors[name]);
+    if (firstInvalid) {
+      document.getElementById(firstInvalid)?.focus();
+    }
+  }
+
   // Maps ASP.NET's ValidationProblemDetails ("errors": { "PropertyName": ["message"] })
   // to the same shape as validate() above, so both can drive the same error display.
   static mapServerErrors(problemDetails) {
@@ -274,7 +283,7 @@ export class StudySessions extends Component {
 
     const fieldErrors = StudySessions.validate(this.state.form);
     if (Object.keys(fieldErrors).length > 0) {
-      this.setState({ fieldErrors, error: null });
+      this.setState({ fieldErrors, error: null }, () => StudySessions.focusFirstInvalidField(fieldErrors));
       return;
     }
 
@@ -302,7 +311,8 @@ export class StudySessions extends Component {
     if (!response.ok) {
       if (response.status === 400) {
         const problemDetails = await response.json();
-        this.setState({ submitting: false, fieldErrors: StudySessions.mapServerErrors(problemDetails) });
+        const serverErrors = StudySessions.mapServerErrors(problemDetails);
+        this.setState({ submitting: false, fieldErrors: serverErrors }, () => StudySessions.focusFirstInvalidField(serverErrors));
       } else {
         this.setState({ submitting: false, error: StudySessions.describeCreateFailure(response.status) });
       }
