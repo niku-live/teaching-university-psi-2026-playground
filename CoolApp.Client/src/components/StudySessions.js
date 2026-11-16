@@ -71,6 +71,21 @@ export class StudySessions extends Component {
     return errors;
   }
 
+  // UX fix 3: one message per cause. "Please try again" cannot help with every failure,
+  // so say what happened, what it means for the user, and what to do next.
+  static describeCreateFailure(status) {
+    if (status === 409) {
+      return 'Someone changed the same data at the same time. Reload the list and try again.';
+    }
+    if (status === 429 || status === 503) {
+      return 'The server is busy right now. Your answers are kept, so try again in a minute.';
+    }
+    if (status >= 500) {
+      return 'Something went wrong on our side, not in your answers. They are kept, so try again later.';
+    }
+    return `The server could not accept this request (HTTP ${status}). Reload the page and try again.`;
+  }
+
   // Mirrors GetAll's own three query parameters exactly - course, minSeatsAvailable,
   // and asOf are all optional, so an empty filter just means "omit it" here too.
   static buildSessionsQuery(filters) {
@@ -287,7 +302,7 @@ export class StudySessions extends Component {
         const problemDetails = await response.json();
         this.setState({ submitting: false, fieldErrors: StudySessions.mapServerErrors(problemDetails) });
       } else {
-        this.setState({ submitting: false, error: 'Could not create the study session. Please try again.' });
+        this.setState({ submitting: false, error: StudySessions.describeCreateFailure(response.status) });
       }
       return;
     }
