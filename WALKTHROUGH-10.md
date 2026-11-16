@@ -772,4 +772,4 @@ dotnet test --project CoolApp.Api.Tests.MSTest
 
 Update `ROADMAP.md` (the Beta items for DTOs, a generic type and the shared memory scenario are done) and `README.md`'s "Current Examples". Still open from the Beta list: end-to-end tests with Playwright, which run the React app in a real browser against the running API.
 
-See [WALKTHROUGHS.md](WALKTHROUGHS.md) for later lectures' walkthroughs as they're added.
+Next: [WALKTHROUGH-11.md](WALKTHROUGH-11.md) applies the UI/UX theory lecture to the React page, in seven independent steps. See [WALKTHROUGHS.md](WALKTHROUGHS.md) for the full list.
