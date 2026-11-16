@@ -25,7 +25,8 @@ All the changes are in `CoolApp.Client/src/components/StudySessions.js`. Run the
 
 ```bash
 cd CoolApp.Client
-npm test
+npm test                                          # every test
+npm test -- --testPathPattern=01-loading-states   # only one step's test file
 ```
 
 > 💡 **How to see the problems in the browser.** Run the app (`dotnet run --project CoolApp.Api`) and open the browser's developer tools (F12), **Network** tab. The throttling list there has **Offline** (no connection at all) and **Slow 4G** (slow answers). To make the API fail, stop it with Ctrl+C while the page is open.
