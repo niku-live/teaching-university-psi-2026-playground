@@ -252,6 +252,17 @@ export class StudySessions extends Component {
         {this.state.ratingMessage && <div className="alert alert-warning" role="alert">{this.state.ratingMessage}</div>}
         <div className="study-sessions-table">
           {contents}
+          {/* UX fix 7: an empty result says why it is empty, and offers the next step. */}
+          {!this.state.loading && !this.state.loadError && this.state.sessions.length === 0 && (
+            Object.values(this.state.filters).some(value => value !== '')
+              ? (
+                <p>
+                  No study sessions match these filters.{' '}
+                  <button className="btn btn-link p-0 align-baseline" type="button" onClick={this.handleFilterClear}>Clear filters</button>
+                </p>
+              )
+              : <p>No study sessions yet. Host the first one below.</p>
+          )}
         </div>
 
         <h2>Host a new study session</h2>
