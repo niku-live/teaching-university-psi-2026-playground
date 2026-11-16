@@ -119,7 +119,7 @@ export class StudySessions extends Component {
     return query ? `?${query}` : '';
   }
 
-  static renderSessionsTable(sessions, onRate) {
+  static renderSessionsTable(sessions, onRate, highlightId) {
     return (
       <table className="table table-striped" aria-labelledby="tableLabel">
         <thead>
@@ -136,7 +136,7 @@ export class StudySessions extends Component {
         </thead>
         <tbody>
           {sessions.map(session =>
-            <tr key={session.id}>
+            <tr key={session.id} className={session.id === highlightId ? 'table-success' : undefined}>
               <td>{session.course}</td>
               <td>{session.topic}</td>
               <td>{session.location}</td>
@@ -197,7 +197,7 @@ export class StudySessions extends Component {
             <button className="btn btn-link p-0 align-baseline" type="button" onClick={() => this.retryLoading()}>Try again</button>
           </div>
         )
-      : StudySessions.renderSessionsTable(this.state.sessions, this.rateSession);
+      : StudySessions.renderSessionsTable(this.state.sessions, this.rateSession, this.state.created?.id);
 
     return (
       <div>
@@ -267,6 +267,12 @@ export class StudySessions extends Component {
             {this.state.submitting ? 'Creating...' : 'Create session'}
           </button>
         </form>
+        {/* UX fix 6: the end of the task is designed too - what happened, and where to look. */}
+        {this.state.created && (
+          <p className="text-success" role="status">
+            Session "{this.state.created.topic}" created. It is highlighted in the list above.
+          </p>
+        )}
       </div>
     );
   }
@@ -287,7 +293,7 @@ export class StudySessions extends Component {
       return;
     }
 
-    this.setState({ submitting: true, error: null, fieldErrors: {} });
+    this.setState({ submitting: true, error: null, fieldErrors: {}, created: null });
 
     // The <input type="datetime-local"> value has no timezone info - it's just
     // "2026-10-24T18:00" in whatever timezone the browser happens to be in. Converting
@@ -319,8 +325,12 @@ export class StudySessions extends Component {
       return;
     }
 
-    this.setState({ form: { ...emptyForm }, submitting: false, fieldErrors: {} });
+    // UX fix 6: before, a successful create only emptied the form - did it work?
+    const created = await response.json();
+    this.setState({ form: { ...emptyForm }, submitting: false, fieldErrors: {}, created });
     await this.populateStudySessions();
+    // Ready for the next session: the cursor goes back to the first field.
+    document.getElementById('course')?.focus();
   }
 
   // Accepts filters explicitly rather than always reading this.state.filters, so
