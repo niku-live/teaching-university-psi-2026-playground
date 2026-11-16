@@ -239,6 +239,8 @@ export class StudySessions extends Component {
           </div>
         </form>
 
+        {/* UX fix 4: a failed rating is reported where the list is, not silently ignored. */}
+        {this.state.ratingMessage && <div className="alert alert-warning" role="alert">{this.state.ratingMessage}</div>}
         <div className="study-sessions-table">
           {contents}
         </div>
@@ -373,10 +375,17 @@ export class StudySessions extends Component {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ value: Number(value) })
-    });
+    }).catch(() => null); // UX fix 4: no answer at all - offline, or the server is down
 
-    if (response.ok) {
+    // UX fix 4: before, a failed rating did nothing at all, while the select kept showing the new value.
+    if (response && response.ok) {
+      this.setState({ ratingMessage: null });
       await this.populateStudySessions();
+    } else if (response && response.status === 404) {
+      this.setState({ ratingMessage: 'That session no longer exists, so it was not rated. The list has been refreshed.' });
+      await this.populateStudySessions();
+    } else {
+      this.setState({ ratingMessage: 'The rating was not saved. Check your connection and pick it again.' });
     }
   }
 }
