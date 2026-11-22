@@ -38,6 +38,8 @@ Requirement coverage still needed:
 
 Also from Lecture 10 (theory 09, software construction): `Directory.Build.props` turns on the recommended .NET analyzers and the `.editorconfig` style rules for every project, and warnings fail the build. Still open for Beta: end-to-end tests with Playwright.
 
+From Lecture 11 (theory 10, UI/UX): the sessions page shows all four states of every request (waiting, slow, failed, done), explains each failure by its cause, moves the focus to the field to fix, confirms a new session and explains an empty list. Each of the seven fixes is independent and has its own test file in `CoolApp.Client/tests/ux/`. Still open from the theory lecture's team task: count one metric from what users do (for example, the share of created sessions that get rated).
+
 ## Final - matches Lab Assignment #3 (lectures 11-14)
 
 Features:
