@@ -13,6 +13,8 @@ Step-by-step, copy-pasteable instructions for turning your own team's project in
 
 - [WALKTHROUGH-10.md](WALKTHROUGH-10.md) - Code Quality Checked by the Build, then DTOs, a Generic Cache and Shared Memory (Lecture 10, optional reading): turn on the .NET analyzers and `.editorconfig` style rules for every project with `Directory.Build.props`, fix or justify what they find and make warnings fail the build - then put request/response DTOs at the API's edge, and add a generic `InMemoryCache<TKey, TValue>` on a `ConcurrentDictionary` shared by every request through a caching decorator. Optionally, mutation testing with Stryker.NET.
 
+- [WALKTHROUGH-11.md](WALKTHROUGH-11.md) - UI/UX in Practice: Seven Small Fixes to One Page (Lecture 11, optional reading): apply the UI/UX theory lecture to the React sessions page, one independent step at a time - four loading states, no silent failures when offline or when a rating fails, one error message per cause, focus on the first field to fix, a clear ending after a create, and an empty list that offers the next step - each proven by a Jest test that fails before the fix. Optionally, measure the page with Lighthouse and the Core Web Vitals.
+
 From Lecture 08 on, the API lives in `CoolApp.Api/` and the React app in `CoolApp.Client/`, with the test projects next to them; earlier walkthroughs describe paths from before that split, when the project sat at the repository root and the React app in `ClientApp/`.
 
 These are separate from [README.md](README.md) and [ROADMAP.md](ROADMAP.md), which describe *this* repository's own product decisions (StudySpot) - the walkthroughs are reusable instructions meant for **your own team's project**, without the StudySpot theming.
